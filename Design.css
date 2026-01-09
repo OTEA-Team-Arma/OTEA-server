@@ -1,0 +1,12 @@
+#log_console {
+    background-color: #1a1a1a;
+    color: #00ff00; /* Vert style Matrix/Terminal */
+    font-family: 'Courier New', monospace;
+    padding: 15px;
+    height: 400px;
+    overflow-y: auto; /* Active le scroll */
+    border-radius: 5px;
+    border: 1px solid #333;
+    font-size: 13px;
+    line-height: 1.5;
+}

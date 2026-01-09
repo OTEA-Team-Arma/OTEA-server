@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Arma Reforger Admin Panel</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --accent: #f39c12; --danger: #c0392b; --success: #27ae60; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
+        
+        /* Navigation */
+        nav { background: #000; display: flex; padding: 0 20px; border-bottom: 2px solid var(--accent); }
+        nav button { background: none; border: none; color: white; padding: 15px 20px; cursor: pointer; font-size: 14px; text-transform: uppercase; }
+        nav button.active { border-bottom: 3px solid var(--accent); color: var(--accent); }
+
+        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Tableaux & Cards */
+        table { width: 100%; border-collapse: collapse; background: var(--card); margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
+        th { background: #252525; color: var(--accent); }
+
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; }
+        .btn-start { background: var(--success); }
+        .btn-delete { background: var(--danger); }
+        .btn-edit { background: #3498db; }
+
+        /* Formulaires */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: var(--accent); }
+        input, textarea, select { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        
+        /* Logs */
+        #logConsole { 
+            background: #000; 
+            color: #00ff00; 
+            padding: 15px; 
+            height: 400px; 
+            overflow-y: auto; 
+            font-family: 'Courier New', monospace; 
+            border: 1px solid #444; 
+            font-size: 13px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <button onclick="openTab('dashboard')" id="defaultTab">Dashboard</button>
+    <button onclick="openTab('logs')">Logs</button>
+    <button onclick="openTab('mods')">Mods & Missions</button>
+    <button onclick="openTab('settings')">Settings</button>
+</nav>
+
+<div class="container">
+    <div id="dashboard" class="tab-content">
+        <h2>Sauvegardes de configurations</h2>
+        <input type="text" id="searchPreset" placeholder="Rechercher un preset..." style="margin-bottom:10px;width:300px;padding:8px;">
+        <table>
+            <thead><tr><th>Titre</th><th>Port</th><th>Mission</th><th>Actions</th></tr></thead>
+            <tbody id="presetList"></tbody>
+        </table>
+    </div>
+
+    <div id="logs" class="tab-content">
+        <h2>Console en direct</h2>
+        <div id="logConsole">Prêt pour la réception des logs...</div>
+        <br>
+        <button class="btn btn-delete" onclick="document.getElementById('logConsole').innerHTML=''">Effacer la console</button>
+    </div>
+
+    <div id="mods" class="tab-content">
+        <h2>Gestion des contenus</h2>
+        <div class="form-group">
+            <label>ID du Scénario (GUID)</label>
+            <input type="text" id="mission_id" placeholder="{GUID}Missions/MaMission.conf">
+        </div>
+        <div class="form-group">
+            <label>Liste des Mods (IDs séparés par des virgules)</label>
+            <textarea id="modList" rows="5" placeholder="Ex: 5EB2615B79667086, 595F290F57796D55"></textarea>
+        </div>
+        <p><small>Note : Ces infos seront incluses dans le prochain Preset sauvegardé.</small></p>
+    </div>
+
+    <div id="settings" class="tab-content">
+        <h2>Réglages du serveur</h2>
+        <div class="form-group">
+            <label>Titre du Preset (Pour vous)</label>
+            <input type="text" id="preset_title" placeholder="Ex: Serveur Samedi Soir">
+        </div>
+        <div class="form-group">
+            <label>Nom du Serveur (Public)</label>
+            <input type="text" id="srv_name">
+        </div>
+        <div class="form-group">
+            <label>Port du serveur</label>
+            <input type="number" id="srv_port" value="2001">
+        </div>
+        <div class="form-group">
+            <label>Nombre de joueurs</label>
+            <input type="number" id="srv_players" value="32">
+        </div>
+        <button class="btn btn-start" onclick="saveSettings()">SAUVEGARDER COMME NOUVEAU PRESET</button>
+    </div>
+</div>
+
+<footer style="text-align:center; margin-top:40px; color:#888;">
+    <div style="display:inline-block;">
+        <img src="signature.png" alt="signature" style="height:40px; vertical-align:middle; margin-right:10px;">
+        <span style="vertical-align:middle;">&copy; 2026 - All rights reserved</span>
+    </div>
+</footer>
+
+<script>
+    // --- NAVIGATION ---
+    function openTab(id) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        if(id === 'dashboard') loadPresets();
+    }
+
+    // --- API ---
+    async function apiRequest(endpoint, method = 'GET', data = null) {
+        try {
+            const options = {
+                method: method,
+                headers: { 'Content-Type': 'application/json' }
+            };
+            if (data) options.body = JSON.stringify(data);
+            const response = await fetch(`/api${endpoint}`, options);
+            return await response.json();
+        } catch (e) {
+            appendLog("Erreur connexion Backend : " + e.message);
+        }
+    }
+
+    // --- LOGS ---
+    function appendLog(message) {
+        const logContainer = document.getElementById('logConsole');
+        const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 1;
+        const time = new Date().toLocaleTimeString();
+        
+        // Couleur selon le contenu
+        let color = "#00ff00";
+        if (message.includes("BAN") || message.includes("KICK")) color = "#ff4444";
+        if (message.includes("Error")) color = "#ffaa00";
+
+        logContainer.innerHTML += `<div><span style="color: #555;">[${time}]</span> <span style="color:${color}">${message}</span></div>`;
+
+        if (isScrolledToBottom) {
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+    }
+
+    // --- GESTION PRESETS ---
+    async function loadPresets() {
+        const presets = await apiRequest('/presets');
+        window._allPresets = presets || [];
+        renderPresetList();
+    }
+
+    async function saveSettings() {
+        const preset = {
+            id: "preset_" + Date.now(),
+            title: document.getElementById('preset_title').value,
+            port: document.getElementById('srv_port').value,
+            game: {
+                name: document.getElementById('srv_name').value,
+                maxPlayers: parseInt(document.getElementById('srv_players').value),
+                scenarioId: document.getElementById('mission_id').value,
+                mods: document.getElementById('modList').value.split(',').map(m => ({ modId: m.trim() }))
+            }
+        };
+
+        await apiRequest('/presets', 'POST', preset);
+        alert("Preset sauvegardé !");
+        openTab('dashboard');
+    }
+
+    async function deletePreset(id) {
+        if (confirm("Supprimer ce preset ?")) {
+            await apiRequest(`/presets/${id}`, 'DELETE');
+            loadPresets();
+        }
+    }
+
+    async function launchServer(id) {
+        const preset = (window._allPresets || []).find(p => p.id === id);
+        if (!preset) return appendLog("Preset introuvable");
+        appendLog("Lancement du serveur sur le port " + preset.port + "...");
+        await apiRequest('/launch', 'POST', preset);
+        renderPresetList();
+    }
+
+    async function stopServer(id) {
+        const preset = (window._allPresets || []).find(p => p.id === id);
+        if (!preset) return appendLog("Preset introuvable");
+        appendLog("Arrêt du serveur sur le port " + preset.port + "...");
+        await apiRequest('/stop', 'POST', { port: preset.port });
+        renderPresetList();
+    }
+
+    // --- RECHERCHE PRESETS ---
+    function renderPresetList() {
+        const search = (document.getElementById('searchPreset')?.value || '').toLowerCase();
+        const presets = (window._allPresets || []);
+        const filtered = presets.filter(p =>
+            p.title?.toLowerCase().includes(search) ||
+            (p.port + '').includes(search) ||
+            p.game?.scenarioId?.toLowerCase().includes(search)
+        );
+        const tbody = document.getElementById('presetList');
+        tbody.innerHTML = filtered.map(p => `
+            <tr>
+                <td>${p.title}</td>
+                <td>${p.port}</td>
+                <td>${p.game.scenarioId.substring(0, 20)}...</td>
+                <td>
+                    <button class="btn btn-start" onclick="launchServer('${p.id}')">Start</button>
+                    <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
+                    <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target && e.target.id === 'searchPreset') {
+            renderPresetList();
+        }
+    });
+
+    // Démarrage
+    document.getElementById('defaultTab').click();
+</script>
+
+</body>
+</html>
