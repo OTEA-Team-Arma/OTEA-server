@@ -1,0 +1,7 @@
+# Copiez ces fichiers à la racine du projet ou adaptez les chemins selon votre organisation.
+#
+# - docker-compose.yml : déploiement Docker + Nginx
+# - Dockerfile : image Node.js pour le backend
+# - nginx.conf : configuration du reverse proxy Nginx
+#
+# Pour un déploiement natif (hors Docker), voir server.service, pm2.config.js, start.sh

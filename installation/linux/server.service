@@ -1,0 +1,14 @@
+[Unit]
+Description=OTEA Server (Node.js)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/otea-server
+ExecStart=/usr/bin/node js/server.js
+Restart=always
+User=www-data
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

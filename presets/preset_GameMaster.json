@@ -1,0 +1,23 @@
+{
+  "id": "gm_arland_01",
+  "title": "Game Master - Arland",
+  "port": 2001,
+  "mission": "{59AD593414377042}Missions/2_Arland_Conflict.conf",
+  "dedicatedServerId": "mon_serveur_gm",
+  "region": "EU",
+  "game": {
+    "name": "[FR] Serveur Game Master",
+    "scenarioId": "{59AD593414377042}Missions/2_Arland_Conflict.conf",
+    "maxPlayers": 16,
+    "password": "ton_mot_de_passe_serveur",
+    "admins": [
+      "TON_STEAM_ID_64"
+    ],
+    "mods": [
+      {
+        "modId": "58D0FB3206D6F8D2",
+        "version": "1.0.0"
+      }
+    ]
+  }
+}

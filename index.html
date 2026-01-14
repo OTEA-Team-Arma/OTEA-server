@@ -2,34 +2,36 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Arma Reforger Admin Panel</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTEA - Admin Panel</title>
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #f39c12; --danger: #c0392b; --success: #27ae60; --text: #e0e0e0; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; }
         
         /* Navigation */
-        nav { background: #000; display: flex; padding: 0 20px; border-bottom: 2px solid var(--accent); }
+        nav { background: #000; display: flex; flex-wrap: wrap; padding: 0 20px; border-bottom: 2px solid var(--accent); }
         nav button { background: none; border: none; color: white; padding: 15px 20px; cursor: pointer; font-size: 14px; text-transform: uppercase; }
         nav button.active { border-bottom: 3px solid var(--accent); color: var(--accent); }
 
-        .container { padding: 20px; max-width: 1200px; margin: auto; }
+        .container { padding: 20px; padding-left: 0; max-width: 1200px; margin: auto; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
         /* Tableaux & Cards */
-        table { width: 100%; border-collapse: collapse; background: var(--card); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: var(--card); margin-top: 10px; font-size: 14px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #333; }
         th { background: #252525; color: var(--accent); }
 
-        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; }
+        .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; margin-right: 5px; margin-bottom: 5px; font-size: 12px; }
         .btn-start { background: var(--success); }
         .btn-delete { background: var(--danger); }
         .btn-edit { background: #3498db; }
 
         /* Formulaires */
         .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; color: var(--accent); }
-        input, textarea, select { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; }
+        label { display: block; margin-bottom: 5px; color: var(--accent); font-size: 14px; }
+        input, textarea, select { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 4px; box-sizing: border-box; font-size: 14px; }
         
         /* Logs */
         #logConsole { 
@@ -40,8 +42,38 @@
             overflow-y: auto; 
             font-family: 'Courier New', monospace; 
             border: 1px solid #444; 
-            font-size: 13px;
+            font-size: 12px;
             line-height: 1.5;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            nav { padding: 0 10px; }
+            nav button { padding: 12px 15px; font-size: 12px; }
+            .container { padding: 15px; }
+            h2 { font-size: 20px; margin-bottom: 20px; }
+            h3 { font-size: 16px; }
+            table { font-size: 12px; }
+            th, td { padding: 8px; }
+            .btn { padding: 6px 10px; font-size: 11px; }
+            input, textarea, select { padding: 8px; font-size: 12px; }
+            .card { padding: 15px 15px 10px 15px !important; }
+        }
+
+        @media (max-width: 480px) {
+            nav { padding: 0 5px; }
+            nav button { padding: 10px 8px; font-size: 10px; }
+            .container { padding: 10px; }
+            h2 { font-size: 18px; margin-bottom: 15px; }
+            h3 { font-size: 14px; }
+            table { font-size: 11px; }
+            th, td { padding: 6px; }
+            .btn { padding: 5px 8px; font-size: 10px; margin-right: 3px; }
+            input, textarea, select { padding: 8px; font-size: 12px; }
+            #logConsole { height: 250px; padding: 10px; font-size: 11px; }
+            .card { padding: 10px 10px 5px 10px !important; }
+            /* Cache les colonnes moins importantes sur mobile */
+            table th:nth-child(3), table td:nth-child(3) { display: none; }
         }
     </style>
 </head>
@@ -49,12 +81,171 @@
 
 <nav>
     <button onclick="openTab('dashboard')" id="defaultTab">Dashboard</button>
-    <button onclick="openTab('logs')">Logs</button>
-    <button onclick="openTab('mods')">Mods & Missions</button>
-    <button onclick="openTab('settings')">Settings</button>
+    <!-- Onglet Logs supprimé - fonctionnalité intégrée dans Administration -->
+    <!-- Onglet Mods & Missions supprimé, fusionné dans Réglages du serveur -->
+    <button onclick="openTab('configuration')">Configuration Serveur</button>
+    <button id="adminUserTab" style="display:none" onclick="openTab('users')">Utilisateurs</button>
+    <button onclick="openTab('administration')">Administration</button>
 </nav>
 
 <div class="container">
+    <div id="administration" class="tab-content">
+        <h2 style="margin-bottom:30px;">Administration</h2>
+        
+        <!-- Notifications -->
+        <div id="notificationContainer" style="position:fixed;top:20px;right:20px;z-index:1000;"></div>
+
+        <!-- Layout 2 colonnes -->
+        <div style="display:flex;gap:10px;margin-top:20px;width:calc(100% - 10px);margin-left:5px;margin-right:5px;">
+            
+            <!-- COLONNE GAUCHE : Actions -->
+            <div style="flex:0 0 320px;margin:0;padding:0;">
+                
+                <!-- Maintenance -->
+                <div style="margin-bottom:25px;">
+                    <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">🔧 Maintenance</h3>
+                    <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <button class="btn btn-warning" id="otearestartBtn" onclick="restartOTEA()" style="background:#ff9800;width:100%;margin-bottom:10px;">Redémarrer OTEA</button>
+                        <div id="otearestartMsg" style="margin:10px 0 0 0;color:#ff9800;font-size:11px;min-height:20px;"></div>
+                    </div>
+                </div>
+
+                <!-- Arma Reforger Server -->
+                <div style="margin-bottom:25px;">
+                    <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">⚙️ Arma Reforger Server</h3>
+                    <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <div style="margin-bottom:12px;">
+                            <small style="color:#999;">Version :</small><br>
+                            <span id="armaInstalledVersion" style="color:var(--accent);font-weight:bold;">...</span>
+                            <span id="armaUpdateIndicator" style="margin-left:10px;color:#f39c12;font-weight:bold;font-size:11px;display:none;">Mise à jour dispo !</span>
+                        </div>
+                        <button class="btn btn-start" id="armaUpdateBtn" onclick="updateArmaServer()" style="width:100%;margin-bottom:10px;">Mettre à jour</button>
+                        <div id="armaUpdateMsg" style="margin:10px 0 0 0;color:#f39c12;font-size:11px;min-height:20px;"></div>
+                        <hr style="margin:12px 0;border:0;border-top:1px solid #333;">
+                        <h4 style="color:var(--accent);margin:8px 0;font-size:12px;">Historique</h4>
+                        <div id="armaUpdateLog" style="background:#181818;padding:10px;border-radius:4px;min-height:40px;max-height:100px;overflow-y:auto;font-size:10px;color:#ccc;"></div>
+                    </div>
+                </div>
+
+                <!-- Player Management (vide pour l'instant) -->
+                <div style="margin-bottom:25px;">
+                    <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">👥 Player Management</h3>
+                    <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <p style="color:#999;font-size:12px;text-align:center;margin:0;">Ban / Kick<br><small style="color:#666;">À venir</small></p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COLONNE DROITE : Monitoring & Logs -->
+            <div style="flex:1;min-width:0;">
+                
+                <!-- État des serveurs -->
+                <div style="margin-bottom:25px;">
+                    <h3 style="color:var(--accent);margin-bottom:12px;font-size:16px;">📊 Surveillance de serveurs</h3>
+                    <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;">
+                            <thead>
+                                <tr style="background:#252525;color:var(--accent);">
+                                    <th style="padding:8px;text-align:left;border-bottom:1px solid #333;">Port</th>
+                                    <th style="padding:8px;text-align:left;border-bottom:1px solid #333;">Statut</th>
+                                    <th style="padding:8px;text-align:left;border-bottom:1px solid #333;">Uptime</th>
+                                </tr>
+                            </thead>
+                            <tbody id="serversStatusTable">
+                                <tr><td colspan="3" style="text-align:center;padding:15px;color:#888;">Chargement...</td></tr>
+                            </tbody>
+                        </table>
+                        <button class="btn btn-edit" onclick="loadServersStatus()" style="font-size:11px;padding:6px 10px;">Rafraîchir</button>
+                    </div>
+                </div>
+
+                <!-- Console en direct -->
+                <div>
+                    <h3 style="color:var(--accent);margin-bottom:12px;font-size:16px;">💻 Console en direct</h3>
+                    <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <div id="logConsole" style="background:#000;color:#00ff00;padding:12px;height:350px;overflow-y:auto;font-family:'Courier New',monospace;border:1px solid #444;font-size:12px;line-height:1.4;border-radius:4px;margin-bottom:10px;">Prêt pour la réception des logs...</div>
+                        <button class="btn btn-delete" onclick="document.getElementById('logConsole').innerHTML=''" style="font-size:11px;padding:6px 10px;">Effacer</button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <div id="configuration" class="tab-content">
+        <h2 style="margin-bottom:30px;">Configuration Serveur</h2>
+        
+        <!-- LISTE DES PRESETS EXISTANTS -->
+        <div style="margin-bottom:40px;">
+            <h3 style="color:var(--accent);margin-bottom:15px;">📋 Presets existants</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+                <table style="width:100%;margin-bottom:0;">
+                    <tbody>
+                        <tr style="background:#252525;color:var(--accent);">
+                            <th style="width:30%;padding:12px;text-align:left;border-bottom:1px solid #333;">Nom du preset</th>
+                            <th style="width:15%;padding:12px;text-align:left;border-bottom:1px solid #333;">Port</th>
+                            <th style="width:25%;padding:12px;text-align:left;border-bottom:1px solid #333;">Scenario</th>
+                            <th style="width:30%;padding:12px;text-align:left;border-bottom:1px solid #333;">Actions</th>
+                        </tr>
+                    </tbody>
+                    <tbody id="presetList"></tbody>
+                </table>
+                <div style="color:#888;text-align:center;padding:18px 0 0 0;font-size:12px;">
+                    Sélectionnez un preset pour le modifier ou le supprimer.
+                </div>
+            </div>
+        </div>
+        
+        <!-- FORMULAIRE DE CRÉATION/ÉDITION -->
+        <h3 style="color:var(--accent);margin-bottom:15px;">⚙️ Créer ou modifier un preset</h3>
+        <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+            <div class="form-group">
+                <label>Titre du Preset (Pour vous)</label>
+                <input type="text" id="preset_title" placeholder="Ex: Serveur Samedi Soir">
+            </div>
+            <div class="form-group">
+                <label>Nom du Serveur (Public)</label>
+                <input type="text" id="srv_name">
+            </div>
+            <div class="form-group">
+                <label>Port du serveur</label>
+                <input type="number" id="srv_port" value="2001">
+            </div>
+            <div class="form-group">
+                <label>Nombre de joueurs</label>
+                <input type="number" id="srv_players" value="32">
+            </div>
+            <hr style="margin:30px 0 20px 0;border:0;border-top:1px solid #444;">
+            <h4 style="color:var(--accent);margin-bottom:15px;">🎮 Mods et Missions</h4>
+            <div class="form-group">
+                <label>ID du Scénario (GUID)</label>
+                <input type="text" id="mission_id" placeholder="{GUID}Missions/MaMission.conf">
+            </div>
+            <div class="form-group">
+                <label>Nom de la Mission</label>
+                <input type="text" id="mission_name" placeholder="Ex: Campaign 23">
+            </div>
+            <div class="form-group">
+                <label>Mods du serveur</label>
+                <table style="width:100%;border-collapse:collapse;background:var(--card);margin-bottom:10px;">
+                    <thead>
+                        <tr style="background:#252525;color:var(--accent);">
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:40%;">ID du Mod</th>
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:35%;">Nom du Mod</th>
+                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:15%;">Version</th>
+                            <th style="padding:10px;text-align:center;border-bottom:1px solid #333;width:10%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modsList">
+                    </tbody>
+                </table>
+                <button class="btn btn-start" type="button" onclick="addModRow()">+ Ajouter un mod</button>
+            </div>
+            <button class="btn btn-start" onclick="saveSettings()" style="margin-top:20px;width:100%;background:var(--success);">ENREGISTRER LA CONFIGURATION</button>
+        </div>
+    </div>
     <div id="dashboard" class="tab-content">
         <h2>Sauvegardes de configurations</h2>
         <input type="text" id="searchPreset" placeholder="Rechercher un preset..." style="margin-bottom:10px;width:300px;padding:8px;">
@@ -64,179 +255,63 @@
         </table>
     </div>
 
-    <div id="logs" class="tab-content">
-        <h2>Console en direct</h2>
-        <div id="logConsole">Prêt pour la réception des logs...</div>
-        <br>
-        <button class="btn btn-delete" onclick="document.getElementById('logConsole').innerHTML=''">Effacer la console</button>
-    </div>
+    <!-- Section Mods & Missions fusionnée dans Réglages du serveur -->
 
-    <div id="mods" class="tab-content">
-        <h2>Gestion des contenus</h2>
-        <div class="form-group">
-            <label>ID du Scénario (GUID)</label>
-            <input type="text" id="mission_id" placeholder="{GUID}Missions/MaMission.conf">
-        </div>
-        <div class="form-group">
-            <label>Liste des Mods (IDs séparés par des virgules)</label>
-            <textarea id="modList" rows="5" placeholder="Ex: 5EB2615B79667086, 595F290F57796D55"></textarea>
-        </div>
-        <p><small>Note : Ces infos seront incluses dans le prochain Preset sauvegardé.</small></p>
-    </div>
+    <!-- Section Settings fusionnée dans Configuration -->
 
-    <div id="settings" class="tab-content">
-        <h2>Réglages du serveur</h2>
-        <div class="form-group">
-            <label>Titre du Preset (Pour vous)</label>
-            <input type="text" id="preset_title" placeholder="Ex: Serveur Samedi Soir">
+    <!-- Section Journal d'activité supprimée (historique non essentiel) -->
+
+    <!-- Onglet Utilisateurs (admin uniquement) -->
+    <div id="users" class="tab-content">
+        <h2>Gestion des utilisateurs</h2>
+        <div id="defaultPwdWarning" style="color:var(--danger);margin-bottom:15px;display:none;">
+            ⚠️ Le mot de passe par défaut est encore utilisé. Merci de le changer rapidement !
         </div>
-        <div class="form-group">
-            <label>Nom du Serveur (Public)</label>
-            <input type="text" id="srv_name">
-        </div>
-        <div class="form-group">
-            <label>Port du serveur</label>
-            <input type="number" id="srv_port" value="2001">
-        </div>
-        <div class="form-group">
-            <label>Nombre de joueurs</label>
-            <input type="number" id="srv_players" value="32">
-        </div>
-        <button class="btn btn-start" onclick="saveSettings()">SAUVEGARDER COMME NOUVEAU PRESET</button>
+        <form id="changePwdForm" onsubmit="return changePassword(event)" style="margin-bottom:30px;max-width:400px;">
+            <h3>Changer mon mot de passe</h3>
+            <div class="form-group">
+                <label>Ancien mot de passe</label>
+                <input type="password" id="old_pwd" required>
+            </div>
+            <div class="form-group">
+                <label>Nouveau mot de passe</label>
+                <input type="password" id="new_pwd" required>
+            </div>
+            <button class="btn btn-edit" type="submit">Changer le mot de passe</button>
+            <div id="changePwdMsg" style="margin-top:10px;"></div>
+        </form>
+        <form id="addUserForm" onsubmit="return addUser(event)" style="max-width:400px;">
+            <h3>Ajouter un utilisateur</h3>
+            <div class="form-group">
+                <label>Pseudo</label>
+                <input type="text" id="new_username" required>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="new_password" required>
+            </div>
+            <div class="form-group">
+                <label>Droits</label>
+                <select id="new_role" required>
+                    <option value="user">Utilisateur</option>
+                    <option value="admin">Administrateur</option>
+                </select>
+            </div>
+            <button class="btn btn-start" type="submit">Ajouter l'utilisateur</button>
+        </form>
+        <div id="addUserMsg" style="margin-top:10px;"></div>
     </div>
 </div>
 
 <footer style="text-align:center; margin-top:40px; color:#888;">
+    <div style="margin-bottom:8px; font-size:14px; color:#f39c12;">
+        Outil communautaire pour serveurs Arma Reforger (non affilié à Bohemia Interactive)
+    </div>
     <div style="display:inline-block;">
-        <img src="signature.png" alt="signature" style="height:40px; vertical-align:middle; margin-right:10px;">
+        <img src="img/signature.png" alt="signature" style="height:40px; vertical-align:middle; margin-right:10px;">
         <span style="vertical-align:middle;">&copy; 2026 - All rights reserved</span>
     </div>
 </footer>
-
-<script>
-    // --- NAVIGATION ---
-    function openTab(id) {
-        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-        event.currentTarget.classList.add('active');
-        if(id === 'dashboard') loadPresets();
-    }
-
-    // --- API ---
-    async function apiRequest(endpoint, method = 'GET', data = null) {
-        try {
-            const options = {
-                method: method,
-                headers: { 'Content-Type': 'application/json' }
-            };
-            if (data) options.body = JSON.stringify(data);
-            const response = await fetch(`/api${endpoint}`, options);
-            return await response.json();
-        } catch (e) {
-            appendLog("Erreur connexion Backend : " + e.message);
-        }
-    }
-
-    // --- LOGS ---
-    function appendLog(message) {
-        const logContainer = document.getElementById('logConsole');
-        const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 1;
-        const time = new Date().toLocaleTimeString();
-        
-        // Couleur selon le contenu
-        let color = "#00ff00";
-        if (message.includes("BAN") || message.includes("KICK")) color = "#ff4444";
-        if (message.includes("Error")) color = "#ffaa00";
-
-        logContainer.innerHTML += `<div><span style="color: #555;">[${time}]</span> <span style="color:${color}">${message}</span></div>`;
-
-        if (isScrolledToBottom) {
-            logContainer.scrollTop = logContainer.scrollHeight;
-        }
-    }
-
-    // --- GESTION PRESETS ---
-    async function loadPresets() {
-        const presets = await apiRequest('/presets');
-        window._allPresets = presets || [];
-        renderPresetList();
-    }
-
-    async function saveSettings() {
-        const preset = {
-            id: "preset_" + Date.now(),
-            title: document.getElementById('preset_title').value,
-            port: document.getElementById('srv_port').value,
-            game: {
-                name: document.getElementById('srv_name').value,
-                maxPlayers: parseInt(document.getElementById('srv_players').value),
-                scenarioId: document.getElementById('mission_id').value,
-                mods: document.getElementById('modList').value.split(',').map(m => ({ modId: m.trim() }))
-            }
-        };
-
-        await apiRequest('/presets', 'POST', preset);
-        alert("Preset sauvegardé !");
-        openTab('dashboard');
-    }
-
-    async function deletePreset(id) {
-        if (confirm("Supprimer ce preset ?")) {
-            await apiRequest(`/presets/${id}`, 'DELETE');
-            loadPresets();
-        }
-    }
-
-    async function launchServer(id) {
-        const preset = (window._allPresets || []).find(p => p.id === id);
-        if (!preset) return appendLog("Preset introuvable");
-        appendLog("Lancement du serveur sur le port " + preset.port + "...");
-        await apiRequest('/launch', 'POST', preset);
-        renderPresetList();
-    }
-
-    async function stopServer(id) {
-        const preset = (window._allPresets || []).find(p => p.id === id);
-        if (!preset) return appendLog("Preset introuvable");
-        appendLog("Arrêt du serveur sur le port " + preset.port + "...");
-        await apiRequest('/stop', 'POST', { port: preset.port });
-        renderPresetList();
-    }
-
-    // --- RECHERCHE PRESETS ---
-    function renderPresetList() {
-        const search = (document.getElementById('searchPreset')?.value || '').toLowerCase();
-        const presets = (window._allPresets || []);
-        const filtered = presets.filter(p =>
-            p.title?.toLowerCase().includes(search) ||
-            (p.port + '').includes(search) ||
-            p.game?.scenarioId?.toLowerCase().includes(search)
-        );
-        const tbody = document.getElementById('presetList');
-        tbody.innerHTML = filtered.map(p => `
-            <tr>
-                <td>${p.title}</td>
-                <td>${p.port}</td>
-                <td>${p.game.scenarioId.substring(0, 20)}...</td>
-                <td>
-                    <button class="btn btn-start" onclick="launchServer('${p.id}')">Start</button>
-                    <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
-                    <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
-                </td>
-            </tr>
-        `).join('');
-    }
-
-    document.addEventListener('input', function(e) {
-        if (e.target && e.target.id === 'searchPreset') {
-            renderPresetList();
-        }
-    });
-
-    // Démarrage
-    document.getElementById('defaultTab').click();
-</script>
-
+<script src="js/app.js" defer></script>
 </body>
 </html>

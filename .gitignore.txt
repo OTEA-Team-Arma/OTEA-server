@@ -1,4 +1,0 @@
-__pycache__/
-*.pyc
-# Ne pas partager ton fichier de données si il contient des infos privées
-signature.png

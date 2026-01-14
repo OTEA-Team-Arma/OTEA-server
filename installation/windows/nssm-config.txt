@@ -1,0 +1,25 @@
+# Exemple de configuration pour NSSM (Non-Sucking Service Manager)
+
+- Application : node
+- Arguments : js/server.js
+- Dossier de démarrage : chemin complet du dossier OTEA-server
+- Redémarrage automatique : Oui
+- Log de sortie : <chemin_vers_logs>\otea-server.log
+
+Commandes principales :
+
+1. Installer le service :
+   nssm install otea-server
+
+2. Configurer les paramètres ci-dessus dans l’interface NSSM
+
+3. Démarrer le service :
+   nssm start otea-server
+
+4. Arrêter le service :
+   nssm stop otea-server
+
+5. Supprimer le service :
+   nssm remove otea-server confirm
+
+Plus d’infos : https://nssm.cc/
