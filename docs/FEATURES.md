@@ -356,6 +356,18 @@ Complete audit trail of all administrative actions.
 
 ## Security Features
 
+### ⚠️ IMPORTANT - Production Security Note
+
+**CURRENT STATUS:** This version is suitable for **development and internal testing only**.
+
+**For production deployment, you MUST:**
+1. ⏳ **Configure HTTPS/TLS** - Currently running HTTP only on port 3000
+2. ⏳ **Set up Nginx reverse proxy** - Template provided in `deployment/nginx.conf`
+3. 🔒 **Change default credentials** - Update admin password in `data/users.json`
+4. 📝 **Review SECURITY_PLAN.md** - Follow the 5-phase security implementation
+
+See [SECURITY_PLAN.md](../deployment/SECURITY_PLAN.md) and [INSTALL.md](./INSTALL.md#docker-installation) for production setup.
+
 ### Authentication
 
 ✅ **Basic Authentication**
@@ -363,10 +375,13 @@ Complete audit trail of all administrative actions.
 - Session tokens
 - Auto-logout: 15 minutes idle
 
-✅ **HTTPS/TLS Support**
-- SSL certificate configuration
-- Encrypted data transmission
-- HSTS headers
+⏳ **HTTPS/TLS Support** (À IMPLÉMENTER)
+- ❌ NOT YET IMPLEMENTED - Currently HTTP only on port 3000
+- Required for production use
+- SSL certificate configuration needed
+- Encrypted data transmission needed
+- HSTS headers needed
+- See [SECURITY_PLAN.md](../deployment/SECURITY_PLAN.md) for implementation steps
 
 ### Authorization
 
@@ -395,7 +410,11 @@ Complete audit trail of all administrative actions.
 
 - IP whitelist support (deployment)
 - VPN tunnel ready
-- Nginx reverse proxy integration
+- ⏳ **Nginx reverse proxy** (À IMPLÉMENTER)
+  - ❌ NOT YET CONFIGURED - Required for production
+  - Template available in `deployment/nginx.conf`
+  - Needed for HTTPS, rate limiting, and security headers
+  - Must be set up before public release
 
 ---
 
@@ -423,10 +442,11 @@ See [API.md](API.md) for complete reference.
 - Node.js native
 - Fast feedback loop
 
-✅ **Production Server**
-- systemd service (Linux)
-- PM2 process manager
-- Nginx reverse proxy
+⏳ **Production Server** (PARTIAL - Nginx & HTTPS À FAIRE)
+- ✅ systemd service (Linux)
+- ✅ PM2 process manager
+- ❌ Nginx reverse proxy (template provided, NOT YET CONFIGURED)
+- ❌ HTTPS/TLS (NOT YET CONFIGURED)
 
 ✅ **Containerized**
 - Docker container
