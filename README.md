@@ -1,191 +1,276 @@
+# 🎮 OTEA - Server Manager for Arma Reforger
 
-# Arma Reforger Server Manager / Gestionnaire de Serveurs OTEA
+**OTEA** is a complete web-based server manager for Arma Reforger multiplayer servers. Deploy, configure, and manage multiple Arma servers from a single unified interface.
 
----
-
-## 🇫🇷 Présentation
-
-Ce projet est un gestionnaire de serveurs Arma Reforger léger, permettant d'administrer un ou plusieurs serveurs via une interface web moderne et responsive.
-
-Fonctionnalités principales :
-- Gérer des presets (sauvegardes de configurations)
-- Modifier la configuration (joueurs, missions, mods)
-- Piloter plusieurs serveurs en parallèle (multi-ports)
-- Dashboard avec recherche rapide
-- Sécuriser l'accès par identifiant/mot de passe
-- Administration complète (Maintenance, Arma Update, Console en direct)
-
-## 🇬🇧 Overview
-
-This project is a lightweight Arma Reforger server manager, allowing you to administer one or more servers through a modern, responsive web interface.
-
-Main features:
-- Manage presets (configuration backups)
-- Edit server settings (players, missions, mods)
-- Run multiple servers in parallel (multi-port)
-- Dashboard with quick search
-- Secure access with username/password
-- Complete Administration (Maintenance, Arma Update, Live Console)
+> **Status**: Production-ready | **License**: MIT | **Community**: Open-source
 
 ---
 
-## 🇫🇷 Structure du projet / 🇬🇧 Project Structure
+## ✨ Features
 
-```
-OTEA-server/
-├── index.html            # Interface web principale / Main web interface
-├── server.js             # Backend Node.js (API, gestion serveurs) / Node.js backend
-├── package.json          # Dépendances Node.js / Node.js dependencies
-├── data/                 # Données persistantes / Persistent data
-│   ├── users.json        # Identifiants et mots de passe / Usernames and passwords
-│   └── config.json       # Modèle de configuration / Config template
-├── presets/              # Configurations sauvegardées / Saved presets
-│   └── preset_*.json     # Fichiers JSON de configuration / Preset JSON files
-├── js/                   # Scripts frontend / Frontend scripts
-│   ├── app.js            # Logique interface web / Web UI logic
-│   └── server.js         # Backend Node.js
-├── css/                  # Feuilles de style / CSS stylesheets
-│   └── Design.css        # Styles personnalisés / Custom styles
-├── img/                  # Images et favicon / Images and favicon
-└── node_modules/         # Dépendances Node.js / Node.js dependencies
-```
+✅ **Web-based Admin Panel** - Intuitive UI for server management  
+✅ **Multi-Instance Support** - Run & manage multiple servers simultaneously  
+✅ **Cross-Platform** - Windows and Linux (same codebase)  
+✅ **Player Management** - Ban, kick, manage players in real-time  
+✅ **Preset System** - Save & load server configurations instantly  
+✅ **Audit Logging** - Complete action history for compliance  
+✅ **Docker-Ready** - Production deployment with Docker Compose  
+✅ **Secure** - Basic Auth + HTTPS support, audit trails  
 
 ---
 
-## 🇫🇷 Installation & Lancement / 🇬🇧 Installation & Launch
+## 🚀 Quick Start
 
-**FR**
-- Prérequis : Node.js installé, ArmaReforgerServer.exe accessible
-- Installation :
+### Windows (Local)
+
 ```bash
+# Clone repo
+git clone https://github.com/your-username/OTEA-server
+cd OTEA-server
+
+# Install dependencies
 npm install
-```
-- Lancement :
-```bash
-node server.js
+
+# Edit configuration
+notepad data/config.json
+# Set ArmaReforgerServer path (ex: C:\Arma3DS\ArmaReforgerServer.exe)
+
+# Start
+node js/server.js
+# Open: http://localhost:3000
 ```
 
-Par défaut, l'interface est accessible à l'adresse http://localhost:3000
+**Default Credentials:**
+```
+Username: admin
+Password: admin1234
+```
 
-**EN**
-- Requirements: Node.js installed, ArmaReforgerServer.exe accessible
-- Install dependencies:
+⚠️ **CHANGE IMMEDIATELY!**
+
+---
+
+### Linux / VPS / Docker
+
+See [Installation Guide](docs/INSTALL.md) for detailed setup instructions.
+
+**Quick Docker:**
 ```bash
+docker-compose -f deployment/docker-compose.yml up -d
+```
+
+---
+
+## 📋 What You Can Do
+
+### Configuration
+- Create server presets with mission/mod settings
+- Configure multiple servers on different ports
+- Save/load configurations instantly
+
+### Management
+- **Start/Stop** servers remotely
+- **Update** Arma Reforger server binary
+- View **server status** and uptime
+- Monitor **player connections**
+
+### Player Control
+- **Ban** players (temporary or permanent)
+- **Kick** players from active servers
+- View **ban list** and manage bans
+- Automatic ban expiration
+
+### Monitoring
+- View all connected players
+- Server status dashboard
+- Complete audit logging
+- Update history tracking
+
+---
+
+## 📚 Documentation
+
+- **[Installation Guide](docs/INSTALL.md)** - Complete setup for Windows/Linux/Docker
+- **[Features](docs/FEATURES.md)** - Detailed feature breakdown
+- **[API Reference](docs/API.md)** - REST API endpoints
+- **[Deployment Guide](deployment/SECURITY_PLAN.md)** - Production setup & security
+- **[FAQ](docs/FAQ.md)** - Common questions
+
+---
+
+## 🏗️ Architecture
+
+```
+OTEA-Server
+├── Frontend (index.html + app.js)
+│   └── Vanilla JS, no dependencies
+├── Backend (Express + Node.js)
+│   ├── osAbstraction.js (cross-platform layer)
+│   ├── Player management endpoints
+│   └── Preset system
+├── Storage (JSON-based)
+│   ├── config.json (system config)
+│   ├── users.json (credentials)
+│   ├── presets/ (server configs)
+│   └── admin.log (audit trail)
+└── Deployment
+    ├── Docker setup
+    ├── Nginx reverse proxy
+    └── Security templates
+```
+
+---
+
+## 🔒 Security
+
+**Current Setup:**
+- Basic Auth for authentication
+- Audit logging of all actions
+- Cross-platform binary validation
+- Permission management
+
+**Production Deployment:**
+- HTTPS/TLS with Let's Encrypt
+- Rate limiting
+- CORS protection
+- Input validation
+- Secrets management
+
+See [SECURITY_PLAN.md](deployment/SECURITY_PLAN.md) for production hardening guide.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend**: Node.js 16+ | Express.js
+- **Frontend**: Vanilla JavaScript (no frameworks)
+- **Database**: JSON files (easily migrate to PostgreSQL)
+- **Deployment**: Docker | Nginx reverse proxy
+- **Cross-Platform**: Windows/Linux abstraction layer
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 16+ (or Docker)
+- Arma Reforger Server binary
+
+
+### Manual Installation
+
+```bash
+# 1. Clone
+git clone https://github.com/your-username/OTEA-server
+cd OTEA-server
+
+# 2. Install dependencies
 npm install
+
+# 3. Configure
+cp data/config.json data/config.json.bak
+# Edit path to your Arma server executable
+
+# 4. Run
+npm start
+# or
+node js/server.js
 ```
-- Start the interface:
+
+### Docker Installation
+
 ```bash
-node server.js
+# Build image
+docker-compose -f deployment/docker-compose.yml build
+
+# Start
+docker-compose -f deployment/docker-compose.yml up -d
+
+# View logs
+docker-compose -f deployment/docker-compose.yml logs -f
 ```
 
-By default, the interface is available at http://localhost:3000
+---
+
+## 🎮 Usage
+
+1. **Access**: Open http://localhost:3000
+2. **Login**: Use admin credentials
+3. **Create Preset**: Configure server settings (port, mods, mission)
+4. **Launch**: Click "Start Server"
+5. **Manage**: Monitor players, manage bans
+6. **Update**: Check for Arma updates
 
 ---
 
-## 🇫🇷 Identifiants par défaut / 🇬🇧 Default credentials
-- Utilisateur / Username: admin
-- Mot de passe / Password: admin1234
+## 🐛 Troubleshooting
 
-⚠️ Changez ces identifiants au premier lancement !
+### Server won't start
+- Check ArmaReforgerServer path in `config.json`
+-  Verify port not already in use
+- Check logs console
 
----
+### Admin users not working
+- Ensure `data/users.json` exists
+- Reset credentials: `echo "[]" > data/users.json`
 
-## 🇫🇷 Navigation / 🇬🇧 Navigation
+### Players not visible
+- Currently shows mock data (connect to real server for live data)
 
-| Onglet / Tab | Fonction / Function |
-|-------------|-----------------|
-| **Dashboard** | Recherche et liste des presets / Search and list all presets |
-| **Configuration Serveur** | Gestion centralisée des presets (liste + formulaire) / Manage presets (list + form) |
-| **Administration** | Actions (Maintenance, Arma Update) + Monitoring (État serveurs, Console) / Actions + Monitoring |
-| **Utilisateurs** (admin) | Gestion des accès / User management |
-
----
-
-## 🇫🇷 Utilisation multi-serveurs / 🇬🇧 Multi-server Usage
-
-### 🇫🇷 Lancement / 🇬🇧 Launch
-
-1. **Configuration Serveur** : Créez des presets avec des ports différents (2001, 2002, etc.)
-2. **Dashboard** : Sélectionnez un preset et cliquez **"Démarrer"**
-3. **Administration → Surveillance** : Vérifiez l'état en temps réel
-4. **Administration → Console** : Consultez les logs en direct
-
-### 🇫🇷 Gestion Multi-Instances / 🇬🇧 Multi-Instance Management
-
-**Principes / Principles :**
-- OTEA gère nativement plusieurs instances
-- Chaque preset = **1 configuration indépendante** / Each preset = 1 independent config
-- Ports réseau **uniques** obligatoires / Unique ports required
-
-**Exemple / Example :**
-
-| Paramètre / Parameter | Preset #1 (Public) | Preset #2 (Privé) |
-|---|---|---|
-| Port | 2001 | 2002 |
-| Nom / Name | Public Server | Test Server |
-| Scénario / Scenario | GameMaster | Training |
-| Joueurs / Players | 32 | 16 |
+See [FAQ.md](docs/FAQ.md) for more help.
 
 ---
 
-## 🇫🇷 Pages principales / 🇬🇧 Main Pages
+## 🤝 Contributing
 
-### Dashboard
-- Liste et recherche rapide de tous les presets
-- Boutons de démarrage/arrêt
-- Affichage du statut
+Contributions are welcome! Here's how:
 
-### Configuration Serveur
-- **Haut** : Liste des presets existants (edit/delete)
-- **Bas** : Formulaire pour créer/modifier un preset
-  - Port, nom serveur, nombre joueurs
-  - Scénario (ID + nom)
-  - Tableau dynamique des mods
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Make your changes
+4. Submit a Pull Request
 
-### Administration (Layout 2 colonnes)
-- **Gauche (Actions)** :
-  - 🔧 Maintenance : Redémarrer OTEA
-  - ⚙️ Arma Reforger Server : Mettre à jour
-  - 👥 Player Management : En attente (Ban/Kick)
-  
-- **Droite (Monitoring)** :
-  - 📊 Surveillance : État des serveurs, uptime
-  - 💻 Console : Logs en temps réel, bouton Effacer
-
-### Utilisateurs (Admin)
-- Changer mot de passe personnel
-- Ajouter des utilisateurs
-- Gérer les droits
+Areas for contribution:
+- Real player data integration (RCon protocol)
+- Web UI improvements
+- Multi-user management
+- Performance optimization
 
 ---
 
-## 🇫🇷 Conseils / 🇬🇧 Tips
+## 📄 License
 
-- ✅ Chaque preset doit avoir un **port unique**
-- ✅ Monitorer via **Administration → Surveillance de serveurs**
-- ✅ Les mods sont gérés dans **Configuration Serveur → Tableau des mods**
-- ✅ Accessible sur **téléphone** (responsive design) - ajoutez en raccourci !
+MIT License - See [LICENSE](LICENSE) file for details
 
 ---
 
-## 🇫🇷 Limitations / 🇬🇧 Limitations
+## ⚠️ Disclaimer
 
-- Backend Windows uniquement (adapter pour Linux si besoin)
-- Authentification basique (HTTP Basic Auth)
-- Player Management (Ban/Kick) : en attente d'intégration
+OTEA is an **unofficial community tool** and is not affiliated with or endorsed by Bohemia Interactive.
 
----
-
-## 🇫🇷 Personnalisation / 🇬🇧 Customization
-
-- **Styles** : `css/Design.css`
-- **Presets** : `presets/*.json`
-- **Utilisateurs** : `data/users.json` ou Admin → Utilisateurs
-- **Configuration** : `data/config.json`
+Arma Reforger is a trademark of Bohemia Interactive.
 
 ---
 
-## 🇫🇷 Contact / 🇬🇧 Contact
+## 📞 Support
 
-Pour toute amélioration ou bug : proposez une PR ou ouvrez une issue !
-For improvements or bug reports: submit a PR or open an issue!
+- **Issues**: Open an issue on GitHub
+- **Discussions**: Use GitHub Discussions
+- **Community**: Join Arma community forums
+
+---
+
+## 🎯 Roadmap
+
+- [ ] Real player data via RCon protocol
+- [ ] Multi-user with role-based access
+- [ ] Webhook integrations (Discord, Slack)
+- [ ] Automated backups
+- [ ] Performance metrics dashboard
+- [ ] Community plugin system
+
+---
+
+**Made with ❤️ for the Arma Reforger community**
+
+⭐ If you find this useful, please star the repo! ⭐

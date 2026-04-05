@@ -86,6 +86,7 @@
     <button onclick="openTab('configuration')">Configuration Serveur</button>
     <button id="adminUserTab" style="display:none" onclick="openTab('users')">Utilisateurs</button>
     <button onclick="openTab('administration')">Administration</button>
+    <button onclick="openTab('playerManagement')">Joueurs</button>
 </nav>
 
 <div class="container">
@@ -127,11 +128,18 @@
                     </div>
                 </div>
 
-                <!-- Player Management (vide pour l'instant) -->
+                <!-- Player Management -->
                 <div style="margin-bottom:25px;">
                     <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">👥 Player Management</h3>
                     <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
-                        <p style="color:#999;font-size:12px;text-align:center;margin:0;">Ban / Kick<br><small style="color:#666;">À venir</small></p>
+                        <div style="margin-bottom:12px;">
+                            <label style="color:var(--accent);font-size:12px;margin-bottom:8px;display:block;">Sélectionner serveur</label>
+                            <select id="playerServerPort" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;">
+                                <option value="">-- Choisir --</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-edit" onclick="loadPlayersConnected()" style="width:100%;margin-bottom:8px;">Rafraîchir Joueurs</button>
+                        <button class="btn btn-start" onclick="openTab('playerManagement')" style="width:100%;background:#9c27b0;margin-bottom:0;">Gérer Bans</button>
                     </div>
                 </div>
 
@@ -260,6 +268,83 @@
     <!-- Section Settings fusionnée dans Configuration -->
 
     <!-- Section Journal d'activité supprimée (historique non essentiel) -->
+
+    <!-- Onglet Player Management -->
+    <div id="playerManagement" class="tab-content">
+        <h2 style="margin-bottom:30px;">Gestion des Joueurs</h2>
+        
+        <!-- JOUEURS CONNECTÉS -->
+        <div style="margin-bottom:40px;">
+            <h3 style="color:var(--accent);margin-bottom:15px;">🟢 Joueurs Connectés</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#252525;color:var(--accent);">
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:20%;">ID</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:30%;">Pseudo</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:15%;">Port</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:20%;">IP</th>
+                            <th style="padding:12px;text-align:center;border-bottom:1px solid #333;width:15%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="onlinePlayersList">
+                        <tr><td colspan="5" style="text-align:center;padding:15px;color:#888;">Aucun joueur trouvé</td></tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-edit" onclick="loadPlayersConnected()" style="margin-top:10px;">Rafraîchir</button>
+            </div>
+        </div>
+
+        <!-- JOUEURS BANNÉS -->
+        <div style="margin-bottom:40px;">
+            <h3 style="color:var(--accent);margin-bottom:15px;">⛔ Joueurs Bannés</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#252525;color:var(--accent);">
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:25%;">Pseudo</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:20%;">Date Ban</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:30%;">Raison</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:15%;">Durée</th>
+                            <th style="padding:12px;text-align:center;border-bottom:1px solid #333;width:10%;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bannedPlayersList">
+                        <tr><td colspan="5" style="text-align:center;padding:15px;color:#888;">Aucun joueur banni</td></tr>
+                    </tbody>
+                </table>
+                <button class="btn btn-edit" onclick="loadBannedList()" style="margin-top:10px;">Rafraîchir</button>
+            </div>
+        </div>
+
+        <!-- AJOUTER BAN MANUEL -->
+        <h3 style="color:var(--accent);margin-bottom:15px;">➕ Bannir Manuellement</h3>
+        <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+            <div class="form-group">
+                <label>Pseudo du joueur</label>
+                <input type="text" id="manualBanPlayerName" placeholder="Entrez le pseudo">
+            </div>
+            <div class="form-group">
+                <label>Raison du ban</label>
+                <textarea id="manualBanReason" placeholder="Ex: Cheat, Spam, Comportement toxique" style="height:60px;resize:vertical;"></textarea>
+            </div>
+            <div style="display:flex;gap:15px;">
+                <div style="flex:1;">
+                    <label>Durée (jours)</label>
+                    <input type="number" id="manualBanDuration" value="30" min="1">
+                </div>
+                <div style="flex:1;">
+                    <label>Type</label>
+                    <select id="manualBanType" style="width:100%;padding:10px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;">
+                        <option value="permanent">Permanent</option>
+                        <option value="temporary" selected>Temporaire</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-delete" onclick="manualBanPlayer()" style="margin-top:15px;width:100%;">Bannir Joueur</button>
+            <div id="manualBanMsg" style="margin-top:10px;font-size:12px;"></div>
+        </div>
+    </div>
 
     <!-- Onglet Utilisateurs (admin uniquement) -->
     <div id="users" class="tab-content">

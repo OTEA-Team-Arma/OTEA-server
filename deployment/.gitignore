@@ -1,0 +1,51 @@
+# Secrets & Configuration
+.env
+.env.prod
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+admin.log
+
+# Certificats SSL
+ssl/
+/etc/letsencrypt/
+
+# Data sensibles
+data/
+backups/
+*.backup
+
+# Node
+node_modules/
+npm-debug.log
+package-lock.json
+
+# Docker
+.dockerignore
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Conteneurs
+.docker
+docker-compose.override.yml
+
+# Monitoring
+prometheus_data/
+grafana_data/
+
+# Temporaires
+tmp/
+temp/
+.tmp/

@@ -1,4 +1,70 @@
-__pycache__/
-*.pyc
-# Ne pas partager ton fichier de données si il contient des infos privées
-signature.png
+# ============================================================================
+# OTEA-Server .gitignore - Secrets & Temporary Files Protection
+# ============================================================================
+
+# === SECRETS & CREDENTIALS ===
+.env
+.env.prod
+.env.local
+.env.*.local
+data/users.json
+data/bans.json
+data/admin.log
+deployment/.env*
+!deployment/.env.example
+
+# === SENSITIVE PATHS ===
+ssl/
+certificates/
+/etc/letsencrypt/
+secrets/
+
+# === ARMA SERVER FILES ===
+*.log
+logs/
+active_config_*.json
+arma_reforger_version.txt
+tmp/
+
+# === NODE ===
+node_modules/
+npm-debug.log
+npm-error.log
+yarn-error.log
+
+# === BACKUPS & ARCHIVES ===
+*.backup
+*.bak
+backups/
+*.tar.gz
+*.zip
+data.backup.*
+
+# === IDE & EDITOR ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# === BUILD & DISTRIBUTION ===
+dist/
+build/
+*.out
+
+# === DOCKER ===
+.docker
+docker-compose.override.yml
+
+# === MONITORING ===
+prometheus_data/
+grafana_data/
+
+# === OS ===
+.AppleDouble
+.LSOverride
+ehthumbs.db

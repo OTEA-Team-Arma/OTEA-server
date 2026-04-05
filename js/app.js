@@ -439,3 +439,219 @@ async function loadServersStatus() {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement du statut</td></tr>';
     }
 }
+
+// ============================================================================
+// PLAYER MANAGEMENT FUNCTIONS
+// ============================================================================
+
+// Charger les joueurs connectés
+async function loadPlayersConnected() {
+    const port = document.getElementById('playerServerPort')?.value;
+    if (!port) {
+        showNotification('⚠️ Veuillez sélectionner un serveur', 'warning');
+        return;
+    }
+    
+    const tbody = document.getElementById('onlinePlayersList');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>';
+    
+    try {
+        const res = await apiRequest('/api/players/list?port=' + port);
+        if (!res || !Array.isArray(res)) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur trouvé</td></tr>';
+            return;
+        }
+        
+        if (res.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur connecté</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = res.map(player => `
+            <tr style="border-bottom:1px solid #333;">
+                <td style="padding:12px;">${player.id}</td>
+                <td style="padding:12px;">${player.name}</td>
+                <td style="padding:12px;color:var(--accent);">${port}</td>
+                <td style="padding:12px;font-size:11px;color:#999;">${player.ip || '-'}</td>
+                <td style="padding:12px;text-align:center;">
+                    <button class="btn btn-edit" onclick="kickPlayer(${player.id}, '${player.name}', ${port})" style="font-size:10px;padding:4px 6px;">Kick</button>
+                    <button class="btn btn-delete" onclick="banPlayer(${player.id}, '${player.name}', ${port})" style="font-size:10px;padding:4px 6px;">Ban</button>
+                </td>
+            </tr>
+        `).join('');
+        
+        appendLog(`✓ ${res.length} joueur(s) connecté(s) sur le port ${port}`);
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement</td></tr>';
+        appendLog('Erreur lors du chargement des joueurs');
+    }
+}
+
+// Expulser un joueur
+async function kickPlayer(playerId, playerName, port) {
+    if (!confirm(`Êtes-vous sûr de vouloir expulser ${playerName} ?`)) {
+        return;
+    }
+    
+    try {
+        const res = await apiRequest('/api/players/kick', 'POST', {
+            playerId: playerId,
+            playerName: playerName,
+            port: port,
+            reason: 'Kicked by admin'
+        });
+        
+        showNotification(`✓ ${playerName} a été expulsé`, 'success');
+        appendLog(`🤐 KICK: ${playerName} expulsé du port ${port}`);
+        loadPlayersConnected();
+    } catch (e) {
+        showNotification('✗ Erreur lors du kick', 'error');
+        appendLog('Erreur lors du kick de ' + playerName);
+    }
+}
+
+// Bannir un joueur
+async function banPlayer(playerId, playerName, port) {
+    const reason = prompt(`Raison du ban pour ${playerName} :`, 'Behavior');
+    if (!reason) return;
+    
+    try {
+        const res = await apiRequest('/api/players/ban', 'POST', {
+            playerName: playerName,
+            port: port,
+            reason: reason,
+            duration: 30,
+            type: 'temporary'
+        });
+        
+        showNotification(`✓ ${playerName} a été banni`, 'success');
+        appendLog(`⛔ BAN: ${playerName} banni (${reason})`);
+        loadPlayersConnected();
+    } catch (e) {
+        showNotification('✗ Erreur lors du ban', 'error');
+        appendLog('Erreur lors du ban de ' + playerName);
+    }
+}
+
+// Charger la liste des joueurs bannés
+async function loadBannedList() {
+    const tbody = document.getElementById('bannedPlayersList');
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>';
+    
+    try {
+        const res = await apiRequest('/api/players/banned');
+        if (!res || !Array.isArray(res)) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur banni</td></tr>';
+            return;
+        }
+        
+        if (res.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur banni</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = res.map(ban => {
+            const banDate = new Date(ban.bannedAt).toLocaleDateString('fr-FR');
+            const duration = ban.type === 'permanent' ? '∞' : ban.duration + 'j';
+            return `
+                <tr style="border-bottom:1px solid #333;">
+                    <td style="padding:12px;">${ban.playerName}</td>
+                    <td style="padding:12px;font-size:11px;">${banDate}</td>
+                    <td style="padding:12px;font-size:11px;">${ban.reason}</td>
+                    <td style="padding:12px;text-align:center;color:var(--accent);font-weight:bold;">${duration}</td>
+                    <td style="padding:12px;text-align:center;">
+                        <button class="btn btn-start" onclick="unbanPlayer(${ban.id}, '${ban.playerName}')" style="font-size:10px;padding:4px 6px;">Débanner</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        
+        appendLog(`✓ ${res.length} joueur(s) banni(s) chargé(s)`);
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement</td></tr>';
+        appendLog('Erreur lors du chargement des bans');
+    }
+}
+
+// Débanner un joueur
+async function unbanPlayer(banId, playerName) {
+    if (!confirm(`Êtes-vous sûr de vouloir débanner ${playerName} ?`)) {
+        return;
+    }
+    
+    try {
+        const res = await apiRequest('/api/players/unban', 'POST', {
+            banId: banId,
+            playerName: playerName
+        });
+        
+        showNotification(`✓ ${playerName} a été débanni`, 'success');
+        appendLog(`✓ UNBAN: ${playerName} débanni`);
+        loadBannedList();
+    } catch (e) {
+        showNotification('✗ Erreur lors du déban', 'error');
+        appendLog('Erreur lors du déban de ' + playerName);
+    }
+}
+
+// Bannir manuellement un joueur
+async function manualBanPlayer() {
+    const playerName = document.getElementById('manualBanPlayerName').value.trim();
+    const reason = document.getElementById('manualBanReason').value.trim();
+    const duration = parseInt(document.getElementById('manualBanDuration').value) || 30;
+    const type = document.getElementById('manualBanType').value;
+    
+    if (!playerName) {
+        showNotification('⚠️ Entrez le pseudo du joueur', 'warning');
+        return;
+    }
+    
+    try {
+        const res = await apiRequest('/api/players/ban', 'POST', {
+            playerName: playerName,
+            reason: reason || 'Raison non spécifiée',
+            duration: duration,
+            type: type
+        });
+        
+        showNotification(`✓ ${playerName} a été banni (${type})`, 'success');
+        appendLog(`⛔ BAN MANUEL: ${playerName} banni (${type} - ${duration}j)`);
+        
+        // Réinitialiser le formulaire
+        document.getElementById('manualBanPlayerName').value = '';
+        document.getElementById('manualBanReason').value = '';
+        document.getElementById('manualBanDuration').value = '30';
+        document.getElementById('manualBanType').value = 'temporary';
+        document.getElementById('manualBanMsg').textContent = '✓ Joueur banni avec succès';
+        
+        // Recharger la liste des bans
+        setTimeout(loadBannedList, 500);
+    } catch (e) {
+        showNotification('✗ Erreur lors du ban', 'error');
+        document.getElementById('manualBanMsg').textContent = '✗ Erreur: ' + (e.message || 'Erreur');
+        appendLog('Erreur lors du ban de ' + playerName);
+    }
+}
+
+// Charger les serveurs disponibles pour le sélecteur
+async function loadServerPortsForPlayers() {
+    try {
+        const presets = await apiRequest('/api/presets');
+        if (!presets || !Array.isArray(presets)) return;
+        
+        const select = document.getElementById('playerServerPort');
+        presets.forEach(preset => {
+            const option = document.createElement('option');
+            option.value = preset.port;
+            option.textContent = `${preset.title} (Port ${preset.port})`;
+            select.appendChild(option);
+        });
+    } catch (e) {
+        console.error('Erreur lors du chargement des ports', e);
+    }
+}
+
+// Initialiser au chargement de la page
+window.addEventListener('DOMContentLoaded', function() {
+    loadServerPortsForPlayers();
+});
