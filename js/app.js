@@ -7,9 +7,27 @@ window.addModRow = function addModRow() {
         <td style="padding:10px;"><input type="text" class="mod-id" placeholder="ID du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
         <td style="padding:10px;"><input type="text" class="mod-name" placeholder="Nom du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
         <td style="padding:10px;"><input type="text" class="mod-version" placeholder="Version" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-        <td style="padding:10px;text-align:center;"><button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button></td>
+        <td style="padding:10px;text-align:center;">
+            <button class="btn" type="button" onclick="moveModUp(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↑</button>
+            <button class="btn" type="button" onclick="moveModDown(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↓</button>
+            <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
+        </td>
     `;
     tbody.appendChild(row);
+}
+
+window.moveModUp = function moveModUp(row) {
+    const prevRow = row.previousElementSibling;
+    if (prevRow) {
+        row.parentNode.insertBefore(row, prevRow);
+    }
+}
+
+window.moveModDown = function moveModDown(row) {
+    const nextRow = row.nextElementSibling;
+    if (nextRow) {
+        row.parentNode.insertBefore(nextRow, row);
+    }
 }
 
 window.getModsFromTable = function getModsFromTable() {
@@ -39,7 +57,11 @@ window.fillModsTable = function fillModsTable(mods) {
                 <td style="padding:10px;"><input type="text" class="mod-id" value="${mod.modId || ''}" placeholder="ID du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
                 <td style="padding:10px;"><input type="text" class="mod-name" value="${mod.name || ''}" placeholder="Nom du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
                 <td style="padding:10px;"><input type="text" class="mod-version" value="${mod.version || ''}" placeholder="Version" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-                <td style="padding:10px;text-align:center;"><button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button></td>
+                <td style="padding:10px;text-align:center;">
+                    <button class="btn" type="button" onclick="moveModUp(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↑</button>
+                    <button class="btn" type="button" onclick="moveModDown(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↓</button>
+                    <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
+                </td>
             `;
             tbody.appendChild(row);
         });
