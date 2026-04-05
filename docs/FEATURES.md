@@ -442,16 +442,34 @@ See [API.md](API.md) for complete reference.
 - Node.js native
 - Fast feedback loop
 
-⏳ **Production Server** (PARTIAL - Nginx & HTTPS À FAIRE)
+⏳ **Production Server** (Ready with setup)
 - ✅ systemd service (Linux)
 - ✅ PM2 process manager
-- ❌ Nginx reverse proxy (template provided, NOT YET CONFIGURED)
-- ❌ HTTPS/TLS (NOT YET CONFIGURED)
+- ✅ Nginx reverse proxy (template provided in `deployment/nginx.conf`)
+- ✅ HTTPS/TLS (templates and guides provided)
+- **Community members CAN deploy this** - See [INSTALL.md](./INSTALL.md) and [SECURITY_PLAN.md](../deployment/SECURITY_PLAN.md)
 
 ✅ **Containerized**
-- Docker container
-- Docker Compose
+- Docker container (ready-to-use)
+- Docker Compose (all services included)
 - Kubernetes ready
+
+### 🚀 For Community Server Operators
+
+**YES - You can use OTEA on your Arma Reforger server!**
+
+To get started:
+1. Follow the [INSTALL.md](./INSTALL.md) guide (choose Windows, Linux, or Docker)
+2. Configure your server in `data/config.json`
+3. For production use, implement HTTPS + Nginx (see below)
+
+**To set up HTTPS + Nginx for production:**
+1. Get an SSL certificate (Let's Encrypt recommended)
+2. Configure Nginx using template in `deployment/nginx.conf`
+3. Follow steps in [SECURITY_PLAN.md](../deployment/SECURITY_PLAN.md)
+4. Docker setup makes this even easier - see [INSTALL.md#docker-installation](./INSTALL.md#docker-installation)
+
+**All templates and guides are provided** - you just need to customize paths and credentials!
 
 ### Performance
 
