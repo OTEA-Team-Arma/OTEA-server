@@ -1,6 +1,9 @@
 # 🎮 OTEA - Server Manager for Arma Reforger
 
-**OTEA** is a complete web-based server manager for Arma Reforger multiplayer servers. Deploy, configure, and manage multiple Arma servers from a single unified interface.
+**OTEA-server** is a complete web-based server manager for Arma Reforger multiplayer servers. Deploy, configure, and manage multiple Arma servers from a single unified interface.
+
+**By OTEA Community** | 🌐 [www.otea.fr](https://www.otea.fr)  
+*OTEA: Opération Tactique d'Extractions et d'Assauts*
 
 > **Status**: Production-ready | **License**: MIT | **Community**: Open-source
 
@@ -218,6 +221,21 @@ docker-compose -f deployment/docker-compose.yml logs -f
 - Currently shows mock data (connect to real server for live data)
 
 See [FAQ.md](docs/FAQ.md) for more help.
+
+---
+
+## 🎖️ About OTEA Community
+
+**OTEA** (Opération Tactique d'Extractions et d'Assauts) is an established French Arma community.
+
+This **OTEA-server** project was created to provide the community with professional server management tools for Arma Reforger.
+
+**Learn more:**
+- 🌐 **Website:** https://www.otea.fr
+- 🎮 **Community:** Join us for tactical Arma operations
+- 💬 **Discord:** Connect with players and admins
+
+**OTEA-server is maintained by the community for the community** - whether you're running a server for OTEA members or the wider Arma community!
 
 ---
 
