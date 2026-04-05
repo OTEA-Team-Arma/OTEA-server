@@ -2,7 +2,7 @@
 
 **OTEA-server** is a complete web-based server manager for Arma Reforger multiplayer servers. Deploy, configure, and manage multiple Arma servers from a single unified interface.
 
-**By OTEA Community** | 🌐 [www.otea.fr](https://www.otea.fr)  
+**By OTEA Community** | 🌐 [www.otea.fr](https://www.otea.fr) | 📦 [GitHub](https://github.com/OTEA-Team-Arma/OTEA-server)  
 *OTEA: Opération Tactique d'Extractions et d'Assauts*
 
 > **Status**: Production-ready | **License**: MIT | **Community**: Open-source
@@ -28,7 +28,7 @@
 
 ```bash
 # Clone repo
-git clone https://github.com/your-username/OTEA-server
+git clone https://github.com/OTEA-Team-Arma/OTEA-server.git
 cd OTEA-server
 
 # Install dependencies
@@ -164,7 +164,7 @@ See [SECURITY_PLAN.md](deployment/SECURITY_PLAN.md) for production hardening gui
 
 ```bash
 # 1. Clone
-git clone https://github.com/your-username/OTEA-server
+git clone https://github.com/OTEA-Team-Arma/OTEA-server.git
 cd OTEA-server
 
 # 2. Install dependencies
