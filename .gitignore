@@ -7,9 +7,12 @@
 .env.prod
 .env.local
 .env.*.local
+!.env.example
 data/users.json
 data/bans.json
 data/admin.log
+data/config.json
+!data/config.example.json
 deployment/.env*
 !deployment/.env.example
 

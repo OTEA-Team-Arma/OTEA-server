@@ -79,14 +79,14 @@ node js/server.js
 ```
 Then use web interface or API.
 
-### Q7: Server won't start - what do I check?
+### Q7: Arma Server won't start via OTEA - what do I check?
 
-**A:** Troubleshooting checklist:
+**A:** Troubleshooting checklist (for **Arma Reforger server**, not OTEA itself):
 
 1. ❌ **Check paths in config.json:**
    ```bash
    ls -la /path/to/ArmaReforgerServer.exe  # Windows
-   ls -la /path/to/ArmaReforgerServer.exe  # Linux
+   ls -la /path/to/ArmaReforgerServer      # Linux
    ```
 
 2. ❌ **Check port availability:**
@@ -97,7 +97,8 @@ Then use web interface or API.
 
 3. ❌ **Check permissions:**
    ```bash
-   chmod +x /path/to/ArmaReforgerServer.exe (Linux)
+   chmod +x /path/to/ArmaReforgerServer (Linux)
+   ```
    ```
 
 4. ❌ **Check logs:**
@@ -149,17 +150,98 @@ Example:
 const PORT = 3000; // Change to your port
 ```
 
-### Q12: Can I access OTEA from other machines?
+### Q12: Can I access OTEA Admin Panel from other machines?
 
-**A:** **Yes!** By default it listens on `0.0.0.0:3000`
+**A:** **Yes, but with CRITICAL SECURITY WARNINGS!**
 
-Access from other machines:
+⚠️ **READ FIRST:** [SECURITY_PORT_3000.md](SECURITY_PORT_3000.md) - **This is important!**
+
+#### Local Network (Safe ✅)
 ```
-http://192.168.1.100:3000   # Internal network
-https://yourdomain.com       # With reverse proxy (Nginx shown in deployment/)
+http://192.168.1.100:3000   # Internal network only
+```
+Requirements:
+- Machine is on your internal network
+- WiFi has WPA2+ encryption
+- Firewall blocks internet access
+
+#### Internet / Production (DANGEROUS ❌ without protection)
+**Default configuration is NOT secure!**
+
+```
+❌ BAD:  http://yourdomain.com:3000  (Exposed!)
+✅ GOOD: https://yourdomain.com:443 via Nginx reverse proxy
 ```
 
-### Q13: How do I set up HTTPS?
+**Why it's dangerous:**
+- Port 3000 = default Node.js (known attack target)
+- HTTP = no encryption (credentials sent in plain text)
+- No rate limiting on login attempts
+- Subject to port scans + automated attacks
+
+**How to do it safely:**
+1. Use HTTPS + reverse proxy (Nginx/Apache)
+2. Force HTTPS, block HTTP
+3. Use Let's Encrypt (free SSL)
+4. Keep strong passwords (20+ chars)
+
+**See:** `deployment/nginx.conf` for secure reverse proxy setup
+
+---
+
+### Q13: OTEA Admin Panel won't start - what do I check?
+
+**A:** If OTEA itself won't launch (not about Arma servers):
+
+1. **Is Node.js installed?**
+   ```bash
+   node --version  # Should show v16+
+   ```
+
+2. **Are dependencies installed?**
+   ```bash
+   npm install
+   ```
+
+3. **Is port 3000 available?**
+   ```bash
+   netstat -ano | findstr :3000  # Windows
+   lsof -i :3000                 # Linux
+   ```
+   
+   If in use, either:
+   - Stop the other process
+   - Change OTEA port (set `OTEA_PORT` env var)
+
+4. **Check logs:**
+   ```bash
+   node js/server.js  # Run in foreground to see errors
+   ```
+
+---
+
+### Q14: How do I change the OTEA Admin Panel port?
+
+**A:** Use environment variable (no code changes needed):
+
+```bash
+# Windows (PowerShell)
+$env:OTEA_PORT = 5000
+node js/server.js
+
+# Linux/Mac (Bash)
+export OTEA_PORT=5000
+node js/server.js
+```
+
+Or hardcode in `js/server.js`:
+```javascript
+const PORT = process.env.OTEA_PORT || 3000;  // Change 3000 to your port
+```
+
+---
+
+### Q15: How do I set up HTTPS?
 
 **A:** Use deployment files:
 1. Copy `deployment/nginx.conf`

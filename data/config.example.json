@@ -1,0 +1,50 @@
+{
+  "comment": "=== OTEA SERVER CONFIGURATION TEMPLATE ===",
+  "comment2": "Copy this file to config.json and edit with YOUR paths",
+  "comment3": "IMPORTANT: config.json is in .gitignore - your local config won't be committed!",
+  "comment4": "Priorité: environment variables > config.json > defaults",
+  
+  "comment_paths": "⚙️ REQUIRED: Set these paths for your system",
+  "serverRootPath": "C:\\Arma3DS",
+  "comment_serverRootPath": "Windows: C:\\Arma3DS | Linux: /home/arma/server",
+  
+  "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",
+  "comment_steamCmdPath": "Optional: Leave empty string \"\" if not installed",
+  
+  "comment_logs": "📊 Log Configuration",
+  "backendLog": true,
+  
+  "comment_instances": "🎮 Instance Management",
+  "maxInstances": 5,
+  "defaultRegion": "EU",
+  
+  "comment_ports": "🔧 Port Configuration",
+  "defaultArmaPort": 2301,
+  "comment_ports_info": "Each preset can have its own port. See presets/*.json",
+  
+  "comment_admin": "👤 Server Identity",
+  "dedicatedServerId": "my_server_name",
+  
+  "comment_mission": "🎯 Default Mission Settings",
+  "game": {
+    "name": "OTEA Example Server",
+    "scenarioId": "{GUID}Missions/YourMission.conf",
+    "maxPlayers": 16,
+    "mods": [
+      {
+        "modId": "58D0FB3206D6F8D2",
+        "version": "1.0.0"
+      }
+    ]
+  },
+  
+  "comment_rotation": "📋 Log Rotation Settings (v2.1+)",
+  "logRotation": {
+    "maxSizeMb": 10,
+    "comment_maxSizeMb": "Rotate admin.log when it exceeds this size",
+    "maxFiles": 5,
+    "comment_maxFiles": "Keep max N archived files (50 MB total)",
+    "maxAgeDays": 30,
+    "comment_maxAgeDays": "Delete logs older than N days"
+  }
+}

@@ -1,9 +1,9 @@
 /**
  * osAbstraction.js
- * 
+ *
  * Couche d'abstraction cross-platform pour OTEA-server
  * Gère tous les détails OS-spécifiques (Windows/Linux) de manière centralisée
- * 
+ *
  * EXPORTS:
  * - init(configFromServer)        : Initialise le module au démarrage
  * - getServerExecutable()         : Retourne le chemin complet au binaire
@@ -41,7 +41,7 @@ let isInitialized = false;
  */
 function _loadConfigWithPriority() {
     let configData = {};
-    
+
     // ÉTAPE 1: Tenter de charger data/config.json
     const configPath = path.join(__dirname, '..', 'data', 'config.json');
     try {
@@ -53,20 +53,20 @@ function _loadConfigWithPriority() {
     } catch (err) {
         console.warn(`[osAbstraction] ⚠️ Warning reading config.json: ${err.message}`);
     }
-    
+
     // ÉTAPE 2: Charger variables d'environnement (override config.json)
     const envVars = {
         serverRootPath: process.env.ARMA_SERVER_ROOT,
         steamCmdPath: process.env.STEAMCMD_PATH,
         backendLog: process.env.BACKEND_LOG ? process.env.BACKEND_LOG === 'true' : undefined
     };
-    
+
     // Fusionner: env vars > config.json
     configData = {
         ...configData,
         ...Object.fromEntries(Object.entries(envVars).filter(([_, v]) => v !== undefined))
     };
-    
+
     // ÉTAPE 3: Remplir les défauts manquants
     if (!configData.serverRootPath) {
         if (platformDetected === 'win32') {
@@ -78,21 +78,21 @@ function _loadConfigWithPriority() {
         }
         console.log(`[osAbstraction] ℹ️  Using default serverRootPath: ${configData.serverRootPath}`);
     }
-    
+
     if (configData.backendLog === undefined) {
         configData.backendLog = true;
     }
-    
+
     if (!configData.maxInstances) {
         configData.maxInstances = 5;
     }
-    
+
     if (!configData.defaultRegion) {
         configData.defaultRegion = 'EU';
     }
-    
+
     configData.platform = platformDetected;
-    
+
     return configData;
 }
 
@@ -101,12 +101,12 @@ function _loadConfigWithPriority() {
  * Construit les chemins complets vers binaires et scripts selon plateforme
  */
 function _constructPaths(config, platform) {
-    let paths = {
+    const paths = {
         executablePath: null,
         updateScriptPath: null,
         baseDir: config.serverRootPath
     };
-    
+
     if (platform === 'win32') {
         paths.executablePath = path.join(config.serverRootPath, 'ArmaReforgerServer.exe');
         paths.updateScriptPath = path.join(config.serverRootPath, 'update_armar_ds.bat');
@@ -116,7 +116,7 @@ function _constructPaths(config, platform) {
     } else {
         throw new Error(`Unsupported platform: ${platform}`);
     }
-    
+
     return paths;
 }
 
@@ -128,13 +128,13 @@ function _ensureExecutablePermissions(executablePath) {
     if (platformDetected !== 'linux') {
         return; // Pas besoin sur Windows
     }
-    
+
     try {
         if (fs.existsSync(executablePath)) {
             const stats = fs.statSync(executablePath);
             // Vérifier si fichier est exécutable (mode & 0o111)
             const isExecutable = (stats.mode & parseInt('111', 8)) !== 0;
-            
+
             if (!isExecutable) {
                 fs.chmodSync(executablePath, 0o755);
                 console.log(`[osAbstraction] ✅ chmod +x applied to: ${executablePath}`);
@@ -155,22 +155,22 @@ function _ensureExecutablePermissions(executablePath) {
  */
 function _validateBinaries(executablePath, updateScriptPath, platform) {
     console.log(`[osAbstraction] 🔍 Validating binaries for platform: ${platform}`);
-    
+
     // Vérification 1: Binaire principal DOIT exister
     if (!fs.existsSync(executablePath)) {
         console.error(`[osAbstraction] ❌ CRITICAL: Binary not found at: ${executablePath}`);
         return false;
     }
     console.log(`[osAbstraction] ✅ Binary found: ${executablePath}`);
-    
+
     // Vérification 2: Script de MAJ (WARNING seulement)
     if (!fs.existsSync(updateScriptPath)) {
         console.warn(`[osAbstraction] ⚠️  Update script not found: ${updateScriptPath}`);
-        console.warn(`[osAbstraction] ⚠️  Server will run but updates may fail`);
+        console.warn('[osAbstraction] ⚠️  Server will run but updates may fail');
     } else {
         console.log(`[osAbstraction] ✅ Update script found: ${updateScriptPath}`);
     }
-    
+
     // Vérification 3: Permissions Linux
     if (platform === 'linux') {
         try {
@@ -179,7 +179,7 @@ function _validateBinaries(executablePath, updateScriptPath, platform) {
             return false;
         }
     }
-    
+
     return true;
 }
 
@@ -195,12 +195,12 @@ function _killProcessWindows(port) {
                 resolve(false);
                 return;
             }
-            
+
             try {
                 const lines = stdout.trim().split('\n');
                 let killed = false;
-                let pidList = [];
-                
+                const pidList = [];
+
                 lines.forEach(line => {
                     const parts = line.trim().split(/\s+/);
                     const pid = parts[4];
@@ -208,12 +208,12 @@ function _killProcessWindows(port) {
                         pidList.push(pid);
                     }
                 });
-                
+
                 if (pidList.length === 0) {
                     resolve(false);
                     return;
                 }
-                
+
                 let completed = 0;
                 pidList.forEach(pid => {
                     exec(`taskkill /PID ${pid} /F`, (error) => {
@@ -247,18 +247,18 @@ function _killProcessLinux(port) {
                 resolve(false);
                 return;
             }
-            
+
             try {
                 const pidList = stdout.trim().split('\n').filter(p => p);
-                
+
                 if (pidList.length === 0) {
                     resolve(false);
                     return;
                 }
-                
+
                 let completed = 0;
                 let killed = false;
-                
+
                 pidList.forEach(pid => {
                     exec(`kill -9 ${pid}`, (error) => {
                         if (!error) {
@@ -290,36 +290,36 @@ function _killProcessLinux(port) {
  */
 function init(configFromServer = {}) {
     console.log('[osAbstraction] 🚀 Initializing osAbstraction module...');
-    
+
     // ÉTAPE 1: Détecter l'OS
     platformDetected = process.platform;
     console.log(`[osAbstraction] 🖥️  Platform detected: ${platformDetected}`);
-    
+
     // ÉTAPE 2: Charger la configuration avec priorités
     config = _loadConfigWithPriority();
     serverRootPath = config.serverRootPath;
     console.log(`[osAbstraction] 📁 Server root path: ${serverRootPath}`);
-    
+
     // ÉTAPE 3: Construire les chemins complets
     const paths = _constructPaths(config, platformDetected);
     executablePath = paths.executablePath;
     updateScriptPath = paths.updateScriptPath;
-    
+
     // ÉTAPE 4: Valider les binaires (CRITICAL CHECK)
     const valid = _validateBinaries(executablePath, updateScriptPath, platformDetected);
-    
+
     if (!valid) {
-        const errorMsg = `FATAL: Initialization failed. Binary not found or validation error.\n` +
+        const errorMsg = 'FATAL: Initialization failed. Binary not found or validation error.\n' +
                         `Expected binary at: ${executablePath}\n` +
-                        `Please ensure the Arma Reforger Server binary is installed correctly.`;
+                        'Please ensure the Arma Reforger Server binary is installed correctly.';
         console.error(`[osAbstraction] ❌ ${errorMsg}`);
         throw new Error(errorMsg);
     }
-    
+
     // ÉTAPE 5: Marquer comme initialisé
     isInitialized = true;
     console.log(`[osAbstraction] ✅ osAbstraction ready for ${platformDetected}`);
-    console.log(`[osAbstraction] ========================================`);
+    console.log('[osAbstraction] ========================================');
 }
 
 /**
@@ -341,18 +341,18 @@ function buildLaunchArgs(configPath, port) {
     if (!isInitialized) {
         throw new Error('osAbstraction not initialized. Call init() first.');
     }
-    
+
     const args = [
         '-config', configPath,
         '-port', String(port),
         '-update'
     ];
-    
+
     // Ajouter -backendlog sur Linux
     if (platformDetected === 'linux' && config.backendLog) {
         args.push('-backendlog');
     }
-    
+
     console.log(`[osAbstraction] 🎯 Launch args for port ${port}: ${args.join(' ')}`);
     return args;
 }
@@ -377,9 +377,9 @@ function killProcessByPort(port) {
     if (!isInitialized) {
         throw new Error('osAbstraction not initialized. Call init() first.');
     }
-    
+
     console.log(`[osAbstraction] 💀 Attempting to kill process on port ${port}...`);
-    
+
     if (platformDetected === 'win32') {
         return _killProcessWindows(port);
     } else if (platformDetected === 'linux') {

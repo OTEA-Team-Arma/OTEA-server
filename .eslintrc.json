@@ -1,0 +1,41 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": "warn",
+    "no-console": "off",
+    "quotes": ["warn", "single", { "avoidEscape": true }],
+    "semi": ["error", "always"],
+    "indent": ["warn", 4],
+    "comma-dangle": ["warn", "never"],
+    "eqeqeq": ["warn", "always"],
+    "curly": ["error", "all"],
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "no-trailing-spaces": "warn",
+    "space-before-function-paren": ["warn", {
+      "anonymous": "always",
+      "named": "never",
+      "asyncArrow": "always"
+    }]
+  },
+  "overrides": [
+    {
+      "files": ["js/app.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "rules": {
+        "no-undef": "off"
+      }
+    }
+  ]
+}

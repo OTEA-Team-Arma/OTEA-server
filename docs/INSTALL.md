@@ -18,23 +18,28 @@ Complete step-by-step installation guide for Windows, Linux, and Docker.
 
 ## System Requirements
 
-### Minimum
+### ⚠️ MANDATORY Prerequisites
+- **Node.js**: 16.x or higher ([Download](https://nodejs.org/))
+- **Arma Reforger Server**: Installed and working
+- **Git**: For cloning repository ([Download](https://git-scm.com/))
+
+### RECOMMENDED - SteamCMD (for auto-updates)
+- **SteamCMD**: For automatic server updates
+  - Windows: https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip
+  - Linux: `sudo apt install steamcmd` (Debian/Ubuntu)
+
+### Minimum Hardware
 - **OS**: Windows 10+ or Linux (any modern distro)
-- **Node.js**: 16.x or higher
-- **RAM**: 512 MB
-- **Disk**: 100 MB for OTEA
+- **RAM**: 512 MB minimum (2 GB+ recommended)
+- **Disk**: 100 MB for OTEA + 10+ GB for Arma server
 - **Network**: Stable internet connection
 
-### Recommended
-- **Node.js**: 18.x or higher
-- **RAM**: 2 GB+
-- **Disk**: SSD (faster response times)
+### Recommended Hardware
+- **Node.js**: 18.x or higher (LTS)
+- **RAM**: 4+ GB (for running multiple servers)
+- **Disk**: SSD (faster I/O for logging)
 - **CPU**: 2+ cores
-
-### For Arma Reforger
-- Arma Reforger Server binary installed
-- 4+ GB RAM for server instances
-- Dedicated network bandwidth
+- **Network**: Dedicated bandwidth for players
 
 ---
 
@@ -53,7 +58,19 @@ node --version
 npm --version
 ```
 
-#### Step 2: Clone Repository
+#### Step 2: Install SteamCMD (Optional but Recommended)
+
+**Why?** Allows OTEA to auto-update your Arma server binary.
+
+1. Download: https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip
+2. Create folder: `C:\SteamCMD\`
+3. Extract zip into that folder
+4. Run `steamcmd.exe` once (initializes)
+5. You'll use `C:\SteamCMD\steamcmd.exe` in config later
+
+**Without SteamCMD:** You can still use OTEA, just update Arma manually via Steam.
+
+#### Step 3: Clone Repository
 
 ```bash
 # Open PowerShell or CMD
@@ -63,7 +80,7 @@ git clone https://github.com/your-username/OTEA-server
 cd OTEA-server
 ```
 
-#### Step 3: Install Dependencies
+#### Step 4: Install Dependencies
 
 ```bash
 npm install
@@ -71,25 +88,44 @@ npm install
 
 Expected output: `added XX packages`
 
-#### Step 4: Configure
+#### Step 5: Configure
 
-Edit `data/config.json`:
+**IMPORTANT:** Your configuration must NOT be committed to git!
 
+1. Copy the example (template):
+```bash
+# Windows (PowerShell)
+Copy-Item data/config.example.json data/config.json
+
+# Linux/Mac (Bash)
+cp data/config.example.json data/config.json
+```
+
+2. Edit **your local** `data/config.json`:
+```bash
+# Windows
+notepad data/config.json
+
+# Linux
+nano data/config.json
+```
+
+3. Set your paths:
 ```json
 {
-  "serverRootPath": "C:\\Arma3DS",
-  "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",
-  "backendLog": true,
-  "maxInstances": 5,
-  "defaultRegion": "EU"
+  "serverRootPath": "C:\\Arma3DS",        # ← YOUR Arma path
+  "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",  # ← YOUR SteamCMD path
+  ...
 }
 ```
 
-**Key paths:**
-- `serverRootPath`: Where ArmaReforgerServer.exe is located
-- `steamCmdPath`: Path to steamcmd.exe (if using SteamCMD)
+**Why two files?**
+- `config.example.json` → Template (committed to GitHub)
+- `config.json` → **YOUR LOCAL configuration** (in .gitignore, never committed)
 
-#### Step 5: Start Server
+When you `git pull` updates, your `config.json` is **never overwritten**! ✅
+
+#### Step 6: Start Server
 
 ```bash
 node js/server.js
@@ -143,25 +179,28 @@ sudo apt upgrade -y
 curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# 3. Clone repository
+# 3. Install SteamCMD (optional but recommended)
+sudo apt install -y steamcmd
+
+# 4. Clone repository
 cd ~/
 git clone https://github.com/your-username/OTEA-server
 cd OTEA-server
 
-# 4. Install dependencies
+# 5. Install dependencies
 npm install
 
-# 5. Configure
+# 6. Configure
 nano data/config.json
 # Edit paths:
 # - serverRootPath: /home/arma/server
-# - steamCmdPath: /home/arma/steamcmd
+# - steamCmdPath: /usr/games/steamcmd (or /home/arma/.local/share/SteamCMD)
 
-# 6. Give permissions
+# 7. Give permissions
 chmod +x js/server.js
 chmod +x deployment/setup.sh
 
-# 7. Start
+# 8. Start
 node js/server.js
 ```
 
@@ -258,13 +297,24 @@ docker-compose -f deployment/docker-compose.yml logs -f backend
 }
 ```
 
-| Setting | Description | Example |
-|---------|-------------|---------|
-| serverRootPath | Arma server root | C:\Arma3DS or /home/arma/server |
-| steamCmdPath | SteamCMD executable | C:\SteamCMD\steamcmd.exe |
-| backendLog | Enable logging | true |
-| maxInstances | Max concurrent servers | 5 |
-| defaultRegion | Default server region | EU, US, AS |
+| Setting | Description | Example | Required? |
+|---------|-------------|---------|-----------|
+| serverRootPath | Arma server root | C:\Arma3DS or /home/arma/server | ✅ YES |
+| steamCmdPath | SteamCMD executable path | C:\SteamCMD\steamcmd.exe | ❌ Optional |
+| backendLog | Enable logging | true | ✅ YES |
+| maxInstances | Max concurrent servers | 5 | ✅ YES |
+| defaultRegion | Default server region | EU, US, AS | ✅ YES |
+
+### ℹ️ About SteamCMD
+
+**If installed:** 
+- OTEA can automatically update your Arma server
+- Use the "Update Server" button in the UI
+
+**If NOT installed:**
+- Leave `steamCmdPath` as empty string: `"steamCmdPath": ""`
+- Update Arma server manually via Steam
+- OTEA will still work fine!
 
 ### data/users.json
 
@@ -344,6 +394,21 @@ taskkill /PID <PID> /F # Windows
 - Check `data/config.json` serverRootPath
 - Verify file exists at that path
 - Use absolute, not relative paths
+
+### "SteamCMD command not found" or "Update button doesn't work"
+
+SteamCMD is optional. If you don't have it:
+
+1. Make sure `steamCmdPath` is empty string in config.json:
+   ```json
+   "steamCmdPath": ""
+   ```
+
+2. Update Arma manually via Steam and OTEA will work fine
+
+3. Or install SteamCMD properly:
+   - **Windows**: Download from https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip
+   - **Linux**: `sudo apt install steamcmd`
 
 ### "npm install" fails
 

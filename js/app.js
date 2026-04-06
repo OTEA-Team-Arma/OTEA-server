@@ -14,21 +14,21 @@ window.addModRow = function addModRow() {
         </td>
     `;
     tbody.appendChild(row);
-}
+};
 
 window.moveModUp = function moveModUp(row) {
     const prevRow = row.previousElementSibling;
     if (prevRow) {
         row.parentNode.insertBefore(row, prevRow);
     }
-}
+};
 
 window.moveModDown = function moveModDown(row) {
     const nextRow = row.nextElementSibling;
     if (nextRow) {
         row.parentNode.insertBefore(nextRow, row);
     }
-}
+};
 
 window.getModsFromTable = function getModsFromTable() {
     const rows = document.querySelectorAll('#modsList tr');
@@ -44,7 +44,7 @@ window.getModsFromTable = function getModsFromTable() {
         }
     });
     return mods;
-}
+};
 
 window.fillModsTable = function fillModsTable(mods) {
     const tbody = document.getElementById('modsList');
@@ -66,7 +66,7 @@ window.fillModsTable = function fillModsTable(mods) {
             tbody.appendChild(row);
         });
     }
-}
+};
 
 // --- GESTION PRESETS ---
 window.updateJsonPreview = function updateJsonPreview() {
@@ -74,11 +74,11 @@ window.updateJsonPreview = function updateJsonPreview() {
         const preset = getPresetFromForm();
         document.getElementById('jsonPreview').textContent = JSON.stringify(preset, null, 2);
     }
-}
+};
 
 window.getPresetFromForm = function getPresetFromForm() {
     return {
-        id: document.getElementById('preset_title').dataset.id || ("preset_" + Date.now()),
+        id: document.getElementById('preset_title').dataset.id || ('preset_' + Date.now()),
         title: document.getElementById('preset_title').value,
         port: document.getElementById('srv_port').value,
         game: {
@@ -89,10 +89,10 @@ window.getPresetFromForm = function getPresetFromForm() {
             mods: getModsFromTable()
         }
     };
-}
+};
 
 // --- NAVIGATION ---
-window.openTab = function(id) {
+window.openTab = function (id) {
     document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -103,11 +103,11 @@ window.openTab = function(id) {
             btn.classList.add('active');
         }
     });
-    if(id === 'dashboard') loadPresets();
-    if(id === 'adminlog') loadAdminLog();
-    if(id === 'armaServer') loadArmaServerInfo();
-    if(id === 'logs') loadServersStatus();
-}
+    if(id === 'dashboard') {loadPresets();}
+    if(id === 'adminlog') {loadAdminLog();}
+    if(id === 'armaServer') {loadArmaServerInfo();}
+    if(id === 'logs') {loadServersStatus();}
+};
 
 // --- FONCTIONS UTILITAIRES ---
 async function apiRequest(endpoint, method = 'GET', data = null) {
@@ -116,11 +116,11 @@ async function apiRequest(endpoint, method = 'GET', data = null) {
             method: method,
             headers: { 'Content-Type': 'application/json' }
         };
-        if (data) options.body = JSON.stringify(data);
+        if (data) {options.body = JSON.stringify(data);}
         const response = await fetch(`/api${endpoint}`, options);
         return await response.json();
     } catch (e) {
-        appendLog("Erreur connexion Backend : " + e.message);
+        appendLog('Erreur connexion Backend : ' + e.message);
     }
 }
 
@@ -128,9 +128,9 @@ function appendLog(message) {
     const logContainer = document.getElementById('logConsole');
     const isScrolledToBottom = logContainer.scrollHeight - logContainer.clientHeight <= logContainer.scrollTop + 1;
     const time = new Date().toLocaleTimeString();
-    let color = "#00ff00";
-    if (message.includes("BAN") || message.includes("KICK")) color = "#ff4444";
-    if (message.includes("Error")) color = "#ffaa00";
+    let color = '#00ff00';
+    if (message.includes('BAN') || message.includes('KICK')) {color = '#ff4444';}
+    if (message.includes('Error')) {color = '#ffaa00';}
     logContainer.innerHTML += `<div><span style="color: #555;">[${time}]</span> <span style="color:${color}">${message}</span></div>`;
     if (isScrolledToBottom) {
         logContainer.scrollTop = logContainer.scrollHeight;
@@ -141,15 +141,15 @@ function appendLog(message) {
 function showNotification(message, type = 'info') {
     const container = document.getElementById('notificationContainer');
     const notification = document.createElement('div');
-    
+
     let bgColor, borderColor;
     switch(type) {
-        case 'success': bgColor = '#27ae60'; borderColor = '#229954'; break;
-        case 'error': bgColor = '#c0392b'; borderColor = '#a93226'; break;
-        case 'warning': bgColor = '#f39c12'; borderColor = '#d68910'; break;
-        default: bgColor = '#3498db'; borderColor = '#2980b9';
+    case 'success': bgColor = '#27ae60'; borderColor = '#229954'; break;
+    case 'error': bgColor = '#c0392b'; borderColor = '#a93226'; break;
+    case 'warning': bgColor = '#f39c12'; borderColor = '#d68910'; break;
+    default: bgColor = '#3498db'; borderColor = '#2980b9';
     }
-    
+
     notification.style.cssText = `
         background: ${bgColor};
         border-left: 4px solid ${borderColor};
@@ -161,10 +161,10 @@ function showNotification(message, type = 'info') {
         animation: slideIn 0.3s ease;
         font-weight: bold;
     `;
-    
+
     notification.textContent = message;
     container.appendChild(notification);
-    
+
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notification.remove(), 300);
@@ -202,10 +202,10 @@ function renderPresetList() {
     tbody.innerHTML = presets.map(p => `
         <tr>
             <td><a href="#" onclick="fillPresetForm(window._allPresets.find(x=>x.id==='${p.id}'))">${p.title}</a></td>
-            <td>${p.port}</td>
+            <td><span style="background:#3a4a5a;padding:4px 8px;border-radius:3px;font-weight:bold;color:var(--accent);">:${p.port}</span><br><small style="color:#888;font-size:11px;margin-top:3px;display:block;">➜ Configurable</small></td>
             <td>${p.game.scenarioId.substring(0, 20)}...</td>
             <td>
-                <button class="btn btn-start" onclick="launchServer('${p.id}')">Start</button>
+                <button class="btn btn-start" onclick="launchServer('${p.id}')" title="Clique pour configurer le port">▶ Start</button>
                 <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
                 <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
             </td>
@@ -218,12 +218,12 @@ if (document.getElementById('presetForm')) {
     document.getElementById('presetForm').addEventListener('input', window.updateJsonPreview);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     updateJsonPreview();
     document.getElementById('defaultTab').click();
 });
 
-document.addEventListener('input', function(e) {
+document.addEventListener('input', function (e) {
     if (e.target && e.target.id === 'searchPreset') {
         renderPresetList();
     }
@@ -237,10 +237,44 @@ async function checkAdminLogTab() {
             document.getElementById('adminLogTab').style.display = '';
         }
     } catch {}
-}
-checkAdminLogTab();
+    // --- GESTION DES LOGS (Admin OTEA vs Serveur Arma) ---
+    let currentLogTab = 'admin';
 
-async function loadAdminLog() {
+    window.switchLogTab = function switchLogTab(tab) {
+        currentLogTab = tab;
+        document.getElementById('logTabAdmin').style.background = tab === 'admin' ? 'var(--accent)' : '#555';
+        document.getElementById('logTabAdmin').style.color = tab === 'admin' ? 'black' : 'white';
+        document.getElementById('logTabArma').style.background = tab === 'arma' ? 'var(--accent)' : '#555';
+        document.getElementById('logTabArma').style.color = tab === 'arma' ? 'black' : 'white';
+        document.getElementById('logRefreshBtn').textContent = tab === 'admin' ? 'Rafraîchir Admin Log' : 'Rafraîchir Logs Arma';
+
+        if (tab === 'admin') {
+            loadAdminLog();
+        } else {
+            loadArmaServerLog();
+        }
+    };
+
+    window.loadArmaServerLog = async function loadArmaServerLog() {
+        const logConsole = document.getElementById('logConsole');
+        logConsole.innerHTML = '⏳ Chargement des logs du serveur Arma...\n';
+        try {
+            const res = await apiRequest('/arma-server-log');
+            if (res && res.log) {
+                logConsole.innerHTML = res.log;
+                if (!res.available) {
+                    logConsole.innerHTML = `⚠️ ATTENTION: Logs du serveur Arma non trouvés\n\n${res.log}`;
+                }
+                logConsole.scrollTop = logConsole.scrollHeight;
+            } else {
+                logConsole.innerHTML = '❌ Erreur: Impossible de charger les logs du serveur Arma';
+            }
+        } catch (err) {
+            logConsole.innerHTML = `❌ Erreur réseau: ${err.message}`;
+        }
+    };
+
+
     const tbody = document.getElementById('adminLogTable');
     tbody.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
     try {
@@ -335,7 +369,7 @@ async function addUser(event) {
 
 // --- ACTIONS PRESETS ---
 async function fillPresetForm(preset) {
-    if (!preset) return;
+    if (!preset) {return;}
     document.getElementById('preset_title').value = preset.title;
     document.getElementById('preset_title').dataset.id = preset.id;
     document.getElementById('srv_name').value = preset.game.name;
@@ -350,29 +384,80 @@ async function fillPresetForm(preset) {
 async function saveSettings() {
     const preset = getPresetFromForm();
     await apiRequest('/presets', 'POST', preset);
-    alert("Preset sauvegardé !");
+    alert('Preset sauvegardé !');
     openTab('dashboard');
 }
 
 async function deletePreset(id) {
-    if (confirm("Supprimer ce preset ?")) {
+    if (confirm('Supprimer ce preset ?')) {
         await apiRequest(`/presets/${id}`, 'DELETE');
         loadPresets();
     }
 }
 
-async function launchServer(id) {
+// Montrer le modal de configuration du port
+function showPortConfigModal(id) {
     const preset = (window._allPresets || []).find(p => p.id === id);
-    if (!preset) return appendLog("Preset introuvable");
-    appendLog("Lancement du serveur sur le port " + preset.port + "...");
-    await apiRequest('/launch', 'POST', preset);
+    if (!preset) {return appendLog('Preset introuvable');}
+
+    // Stocker le preset ID temporairement
+    window._pendingLaunchId = id;
+
+    // Remplir le modal
+    document.getElementById('modalServerName').textContent = preset.title || preset.id;
+    document.getElementById('modalOriginalPort').textContent = preset.port || 2001;
+    document.getElementById('modalPortInput').value = preset.port || 2001;
+
+    // Afficher le modal
+    document.getElementById('portConfigModal').style.display = 'flex';
+
+    // Focus sur le champ port
+    setTimeout(() => document.getElementById('modalPortInput').focus(), 100);
+}
+
+function closePortModal() {
+    document.getElementById('portConfigModal').style.display = 'none';
+    window._pendingLaunchId = null;
+}
+
+// Valider et lancer avec le port configuré
+async function confirmPortAndLaunch() {
+    const presetId = window._pendingLaunchId;
+    const newPort = parseInt(document.getElementById('modalPortInput').value);
+
+    // Validation du port
+    if (!newPort || newPort < 1024 || newPort > 65535) {
+        alert('⚠️ Port invalide! Utilisez un port entre 1024 et 65535.');
+        return;
+    }
+
+    const preset = (window._allPresets || []).find(p => p.id === presetId);
+    if (!preset) {return appendLog('Preset introuvable');}
+
+    // Mettre à jour le port du preset temporairement
+    preset.port = newPort;
+
+    closePortModal();
+
+    appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${newPort}...`);
+    const result = await apiRequest('/launch', 'POST', preset);
+
+    if (result) {
+        appendLog(`✅ Serveur lancé avec succès sur le port ${newPort}!`);
+    }
+
     renderPresetList();
+}
+
+async function launchServer(id) {
+    // Afficher le modal au lieu de lancer directement
+    showPortConfigModal(id);
 }
 
 async function stopServer(id) {
     const preset = (window._allPresets || []).find(p => p.id === id);
-    if (!preset) return appendLog("Preset introuvable");
-    appendLog("Arrêt du serveur sur le port " + preset.port + "...");
+    if (!preset) {return appendLog('Preset introuvable');}
+    appendLog('Arrêt du serveur sur le port ' + preset.port + '...');
     await apiRequest('/stop', 'POST', { port: preset.port });
     renderPresetList();
 }
@@ -381,7 +466,7 @@ async function stopServer(id) {
 async function loadArmaServerInfo() {
     // Récupère version installée, version dispo, log
     const info = await apiRequest('/arma-server/info');
-    if (!info) return;
+    if (!info) {return;}
     document.getElementById('armaInstalledVersion').textContent = info.installedVersion || 'Inconnue';
     // Indicateur nouvelle version
     if (info.latestVersion && info.installedVersion && info.latestVersion !== info.installedVersion) {
@@ -412,7 +497,7 @@ async function updateArmaServer() {
 }
 
 async function restartOTEA() {
-    if (!confirm("Êtes-vous sûr ? OTEA va redémarrer et sera temporairement indisponible.")) {
+    if (!confirm('Êtes-vous sûr ? OTEA va redémarrer et sera temporairement indisponible.')) {
         return;
     }
     document.getElementById('otearestartBtn').disabled = true;
@@ -473,22 +558,22 @@ async function loadPlayersConnected() {
         showNotification('⚠️ Veuillez sélectionner un serveur', 'warning');
         return;
     }
-    
+
     const tbody = document.getElementById('onlinePlayersList');
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>';
-    
+
     try {
         const res = await apiRequest('/api/players/list?port=' + port);
         if (!res || !Array.isArray(res)) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur trouvé</td></tr>';
             return;
         }
-        
+
         if (res.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur connecté</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = res.map(player => `
             <tr style="border-bottom:1px solid #333;">
                 <td style="padding:12px;">${player.id}</td>
@@ -501,7 +586,7 @@ async function loadPlayersConnected() {
                 </td>
             </tr>
         `).join('');
-        
+
         appendLog(`✓ ${res.length} joueur(s) connecté(s) sur le port ${port}`);
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement</td></tr>';
@@ -514,7 +599,7 @@ async function kickPlayer(playerId, playerName, port) {
     if (!confirm(`Êtes-vous sûr de vouloir expulser ${playerName} ?`)) {
         return;
     }
-    
+
     try {
         const res = await apiRequest('/api/players/kick', 'POST', {
             playerId: playerId,
@@ -522,7 +607,7 @@ async function kickPlayer(playerId, playerName, port) {
             port: port,
             reason: 'Kicked by admin'
         });
-        
+
         showNotification(`✓ ${playerName} a été expulsé`, 'success');
         appendLog(`🤐 KICK: ${playerName} expulsé du port ${port}`);
         loadPlayersConnected();
@@ -535,8 +620,8 @@ async function kickPlayer(playerId, playerName, port) {
 // Bannir un joueur
 async function banPlayer(playerId, playerName, port) {
     const reason = prompt(`Raison du ban pour ${playerName} :`, 'Behavior');
-    if (!reason) return;
-    
+    if (!reason) {return;}
+
     try {
         const res = await apiRequest('/api/players/ban', 'POST', {
             playerName: playerName,
@@ -545,7 +630,7 @@ async function banPlayer(playerId, playerName, port) {
             duration: 30,
             type: 'temporary'
         });
-        
+
         showNotification(`✓ ${playerName} a été banni`, 'success');
         appendLog(`⛔ BAN: ${playerName} banni (${reason})`);
         loadPlayersConnected();
@@ -559,19 +644,19 @@ async function banPlayer(playerId, playerName, port) {
 async function loadBannedList() {
     const tbody = document.getElementById('bannedPlayersList');
     tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>';
-    
+
     try {
         const res = await apiRequest('/api/players/banned');
         if (!res || !Array.isArray(res)) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur banni</td></tr>';
             return;
         }
-        
+
         if (res.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucun joueur banni</td></tr>';
             return;
         }
-        
+
         tbody.innerHTML = res.map(ban => {
             const banDate = new Date(ban.bannedAt).toLocaleDateString('fr-FR');
             const duration = ban.type === 'permanent' ? '∞' : ban.duration + 'j';
@@ -587,7 +672,7 @@ async function loadBannedList() {
                 </tr>
             `;
         }).join('');
-        
+
         appendLog(`✓ ${res.length} joueur(s) banni(s) chargé(s)`);
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement</td></tr>';
@@ -600,13 +685,13 @@ async function unbanPlayer(banId, playerName) {
     if (!confirm(`Êtes-vous sûr de vouloir débanner ${playerName} ?`)) {
         return;
     }
-    
+
     try {
         const res = await apiRequest('/api/players/unban', 'POST', {
             banId: banId,
             playerName: playerName
         });
-        
+
         showNotification(`✓ ${playerName} a été débanni`, 'success');
         appendLog(`✓ UNBAN: ${playerName} débanni`);
         loadBannedList();
@@ -622,12 +707,12 @@ async function manualBanPlayer() {
     const reason = document.getElementById('manualBanReason').value.trim();
     const duration = parseInt(document.getElementById('manualBanDuration').value) || 30;
     const type = document.getElementById('manualBanType').value;
-    
+
     if (!playerName) {
         showNotification('⚠️ Entrez le pseudo du joueur', 'warning');
         return;
     }
-    
+
     try {
         const res = await apiRequest('/api/players/ban', 'POST', {
             playerName: playerName,
@@ -635,17 +720,17 @@ async function manualBanPlayer() {
             duration: duration,
             type: type
         });
-        
+
         showNotification(`✓ ${playerName} a été banni (${type})`, 'success');
         appendLog(`⛔ BAN MANUEL: ${playerName} banni (${type} - ${duration}j)`);
-        
+
         // Réinitialiser le formulaire
         document.getElementById('manualBanPlayerName').value = '';
         document.getElementById('manualBanReason').value = '';
         document.getElementById('manualBanDuration').value = '30';
         document.getElementById('manualBanType').value = 'temporary';
         document.getElementById('manualBanMsg').textContent = '✓ Joueur banni avec succès';
-        
+
         // Recharger la liste des bans
         setTimeout(loadBannedList, 500);
     } catch (e) {
@@ -659,8 +744,8 @@ async function manualBanPlayer() {
 async function loadServerPortsForPlayers() {
     try {
         const presets = await apiRequest('/api/presets');
-        if (!presets || !Array.isArray(presets)) return;
-        
+        if (!presets || !Array.isArray(presets)) {return;}
+
         const select = document.getElementById('playerServerPort');
         presets.forEach(preset => {
             const option = document.createElement('option');
@@ -674,6 +759,69 @@ async function loadServerPortsForPlayers() {
 }
 
 // Initialiser au chargement de la page
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function () {
     loadServerPortsForPlayers();
+    checkArmaUpdates();
+    // Check for updates every hour
+    setInterval(checkArmaUpdates, 3600000);
 });
+
+// ============================================================================
+// NEW: Arma Version Update Detection
+// ============================================================================
+
+/**
+ * Check for Arma Reforger updates
+ */
+async function checkArmaUpdates() {
+    try {
+        const response = await fetch('/api/arma-server/check-updates');
+        if (!response.ok) {
+            throw new Error('Failed to check updates');
+        }
+
+        const data = await response.json();
+
+        const updateBadge = document.getElementById('updateBadge');
+        if (!updateBadge) {
+            console.warn('[updateBadge] Element not found in DOM');
+            return;
+        }
+
+        if (data.updateAvailable) {
+            updateBadge.style.display = 'block';
+            updateBadge.innerHTML = `
+                <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 12px 15px; margin: 10px 0; border-radius: 5px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #333; font-weight: bold;">
+                        🔔 Mise à jour disponible: ${data.available} (installée: ${data.installed})
+                    </span>
+                    <button class="btn" style="background: #ffc107; color: #333; padding: 8px 15px; cursor: pointer; border: none; border-radius: 3px; font-weight: bold;" onclick="triggerArmaUpdate()">
+                        Mettre à jour maintenant
+                    </button>
+                </div>
+            `;
+        } else {
+            updateBadge.style.display = 'none';
+        }
+    } catch (err) {
+        console.error('[checkArmaUpdates] Failed:', err);
+    }
+}
+
+/**
+ * Trigger Arma server update
+ */
+window.triggerArmaUpdate = function triggerArmaUpdate() {
+    if (confirm('Êtes-vous sûr? Cela va télécharger la mise à jour via SteamCMD.')) {
+        // Call the existing update endpoint
+        apiRequest('/api/update-server', {
+            method: 'POST'
+        }).then(() => {
+            alert('Mise à jour lancée! Consultez les logs pour plus de détails.');
+            // Refresh check in 30 seconds
+            setTimeout(checkArmaUpdates, 30000);
+        }).catch((err) => {
+            alert(`Erreur lors du lancement de la mise à jour: ${err.message}`);
+        });
+    }
+};

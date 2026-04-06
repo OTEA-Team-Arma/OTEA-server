@@ -16,5 +16,17 @@
     "mods": [
       {"modId": "58D0FB3206D6F8D2", "version": "1.0.0"}
     ]
+  },
+  "comment_ports": "🔧 Configuration des ports Arma Reforger",
+  "defaultArmaPort": 2301,
+  "comment_ports_info": "Chaque instance doit avoir son propre port. Dans chaque preset, spécifier 'port': XXXX",
+  "comment_log_rotation": "📊 Gestion automatique des logs admin (depuis v2.1)",
+  "logRotation": {
+    "maxSizeMb": 10,
+    "comment_maxSizeMb": "Rotation du fichier admin.log quand il dépasse 10 MB",
+    "maxFiles": 5,
+    "comment_maxFiles": "Garder max 5 fichiers archivés (50 MB total)",
+    "maxAgeDays": 30,
+    "comment_maxAgeDays": "Supprimer automatiquement les logs > 30 jours"
   }
 }

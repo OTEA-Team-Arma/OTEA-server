@@ -9,6 +9,58 @@
 
 ---
 
+## ⚠️ Prerequisites (REQUIRED - Install First!)
+
+Before installing OTEA, you **MUST** have:
+
+### 1. ✅ Node.js 16.x or higher
+**Download here:** https://nodejs.org/
+
+```bash
+# Verify installation
+node --version  # Should output v16.0.0 or higher
+npm --version   # Should output 8.0.0 or higher
+```
+
+### 2. ✅ Arma Reforger Server Binary
+- Purchase and install from Steam
+- Default path: `C:\Arma3DS` (Windows) or `/home/user/arma3ds` (Linux)
+
+### 3. ✅ SteamCMD (Optional but Recommended)
+Allows OTEA to auto-update your Arma server.
+
+**Installation Guide:**
+- **Windows**: [SteamCMD Windows Guide](https://developer.valvesoftware.com/wiki/SteamCMD#Windows)
+  - Download: https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip
+  - Extract to: `C:\SteamCMD\` (or your preferred location)
+  
+- **Linux**: [SteamCMD Linux Guide](https://developer.valvesoftware.com/wiki/SteamCMD#Linux)
+  ```bash
+  sudo apt install steamcmd  # Debian/Ubuntu
+  ```
+
+After SteamCMD installation, update your paths in `data/config.json` later.
+
+---
+
+## 🔒 SECURITY NOTICE - Port 3000 Exposure
+
+⚠️ **IMPORTANT BEFORE DEPLOYMENT TO INTERNET**
+
+Default configuration binds to `0.0.0.0:3000` (HTTP, unencrypted).
+
+**For Internet/Production Use:**
+- ❌ DO NOT expose port 3000 directly to the internet
+- ✅ Use reverse proxy (Nginx/Apache) with HTTPS/SSL
+- ✅ Force HTTPS, block HTTP
+- ✅ Use strong authentication (20+ character passwords)
+
+**See:** [docs/SECURITY_PORT_3000.md](docs/SECURITY_PORT_3000.md) for deployment patterns
+
+**Local Network?** You're safe with default config if properly firewalled.
+
+---
+
 ## ✨ Features
 
 ✅ **Web-based Admin Panel** - Intuitive UI for server management  
@@ -37,6 +89,7 @@ npm install
 # Edit configuration
 notepad data/config.json
 # Set ArmaReforgerServer path (ex: C:\Arma3DS\ArmaReforgerServer.exe)
+# Set SteamCMD path if installed (ex: C:\SteamCMD\steamcmd.exe)
 
 # Start
 node js/server.js
@@ -73,7 +126,7 @@ docker-compose -f deployment/docker-compose.yml up -d
 
 ### Management
 - **Start/Stop** servers remotely
-- **Update** Arma Reforger server binary
+- **Update** Arma Reforger server binary (with SteamCMD)
 - View **server status** and uptime
 - Monitor **player connections**
 
@@ -93,7 +146,7 @@ docker-compose -f deployment/docker-compose.yml up -d
 
 ## 📚 Documentation
 
-- **[Installation Guide](docs/INSTALL.md)** - Complete setup for Windows/Linux/Docker
+- **[Installation Guide](docs/INSTALL.md)** - Complete setup for Windows/Linux/Docker with prerequisites
 - **[Features](docs/FEATURES.md)** - Detailed feature breakdown
 - **[API Reference](docs/API.md)** - REST API endpoints
 - **[Deployment Guide](deployment/SECURITY_PLAN.md)** - Production setup & security

@@ -10,8 +10,11 @@ echo "Mise a jour Arma Reforger Server (Linux)"
 echo "========================================"
 echo ""
 
-# === ADAPTER CES CHEMINS À VOTRE CONFIGURATION ===
-STEAMCMD_PATH="/usr/bin/steamcmd"
+# === LIRE DEPUIS VARIABLE D'ENVIRONNEMENT OU UTILISER DÉFAUT ===
+# Si STEAMCMD_PATH n'est pas défini (via OTEA config.json), utiliser défaut Linux
+if [ -z "$STEAMCMD_PATH" ]; then
+    STEAMCMD_PATH="/usr/bin/steamcmd"
+fi
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVER_DIR="$SCRIPT_DIR"
 APP_ID=1874900

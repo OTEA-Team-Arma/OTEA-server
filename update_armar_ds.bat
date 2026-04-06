@@ -12,8 +12,11 @@ echo Mise a jour Arma Reforger Server
 echo ========================================
 echo.
 
-REM === ADAPTER CES CHEMINS À VOTRE CONFIGURATION ===
-set STEAMCMD_PATH=C:\SteamCMD\steamcmd.exe
+REM === LIRE DEPUIS VARIABLE D'ENVIRONNEMENT OU UTILISER DÉFAUT ===
+REM Si STEAMCMD_PATH n'est pas défini (via OTEA config.json), utiliser défaut Windows
+if not defined STEAMCMD_PATH (
+    set STEAMCMD_PATH=C:\SteamCMD\steamcmd.exe
+)
 set SERVER_DIR=%~dp0
 set APP_ID=1874900
 
