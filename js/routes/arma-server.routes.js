@@ -1,54 +1,96 @@
 /**
- * routes/arma-server.routes.js
- * Routes pour les opérations du serveur Arma
+ * routes/servers.routes.js
+ * Routes pour les opérations des serveurs Arma
  */
 
 const express = require('express');
 const router = express.Router();
 
 const ArmaServerController = require('../controllers/arma-server.controller');
+const ArmaLogsController = require('../controllers/arma-logs.controller');
 
 /**
- * GET /api/arma-server/status
- * Récupère le statut du serveur Arma
+ * GET /api/servers
+ * Liste le statut de tous les serveurs
  */
-router.get('/status', (req, res) => {
-    return ArmaServerController.getStatus(req, res);
-});
+router.get('/', ArmaServerController.getAllServers);
 
 /**
- * GET /api/arma-server/check-updates
- * Vérifie les mises à jour disponibles
+ * GET /api/servers/health
+ * Health check pour tous les serveurs
  */
-router.get('/check-updates', (req, res) => {
-    return ArmaServerController.checkUpdates(req, res);
-});
+router.get('/health', ArmaServerController.healthCheck);
 
 /**
- * POST /api/arma-server/start
- * Démarre le serveur Arma
- * Requires: auth middleware
+ * GET /api/servers/:port
+ * Récupère le statut d'un serveur spécifique
  */
-router.post('/start', (req, res) => {
-    return ArmaServerController.startServer(req, res);
-});
+router.get('/:port', ArmaServerController.getServerStatus);
 
 /**
- * POST /api/arma-server/stop
- * Arrête le serveur Arma
- * Requires: auth middleware
+ * GET /api/servers/info/:port
+ * Récupère les infos détaillées d'un serveur
  */
-router.post('/stop', (req, res) => {
-    return ArmaServerController.stopServer(req, res);
-});
+router.get('/info/:port', ArmaServerController.getServerInfo);
 
 /**
- * POST /api/arma-server/update
- * Déclenche une mise à jour
- * Requires: auth middleware
+ * POST /api/servers
+ * Lance un nouveau serveur
  */
-router.post('/update', (req, res) => {
-    return ArmaServerController.updateServer(req, res);
-});
+router.post('/', ArmaServerController.startServer);
+
+/**
+ * POST /api/servers/:port/restart
+ * Redémarre un serveur
+ */
+router.post('/:port/restart', ArmaServerController.restartServer);
+
+/**
+ * PUT /api/servers/:port/config
+ * Met à jour la configuration d'un serveur
+ */
+router.put('/:port/config', ArmaServerController.updateServerConfig);
+
+/**
+ * DELETE /api/servers/:port
+ * Arrête un serveur
+ */
+router.delete('/:port', ArmaServerController.stopServer);
+
+// =========================================================================
+// LOGS ROUTES - Streaming et filtrage des logs Arma
+// =========================================================================
+
+/**
+ * GET /api/servers/:port/logs/filters
+ * Récupère les presets de filtrage disponibles
+ */
+router.get('/:port/logs/filters', ArmaLogsController.getFilterPresets);
+
+/**
+ * GET /api/servers/:port/logs/stream
+ * Stream des logs en temps réel (compatible long polling)
+ * Query params: filter, preset, level, since
+ */
+router.get('/:port/logs/stream', ArmaLogsController.getServerLogsStream);
+
+/**
+ * GET /api/servers/:port/logs/stats
+ * Récupère les stats des logs
+ */
+router.get('/:port/logs/stats', ArmaLogsController.getLogsStats);
+
+/**
+ * GET /api/servers/:port/logs
+ * Récupère les logs du serveur avec filtres optionnels
+ * Query params: filter, preset, limit, level, since
+ */
+router.get('/:port/logs', ArmaLogsController.getServerLogs);
+
+/**
+ * DELETE /api/servers/:port/logs
+ * Vide tous les logs du serveur
+ */
+router.delete('/:port/logs', ArmaLogsController.clearLogs);
 
 module.exports = router;

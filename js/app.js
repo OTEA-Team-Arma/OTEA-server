@@ -112,9 +112,13 @@ window.openTab = function (id) {
 // --- FONCTIONS UTILITAIRES ---
 async function apiRequest(endpoint, method = 'GET', data = null) {
     try {
+        const auth = btoa('admin:admin1234');
         const options = {
             method: method,
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Basic ${auth}`
+            }
         };
         if (data) {options.body = JSON.stringify(data);}
         const response = await fetch(`/api${endpoint}`, options);
@@ -214,12 +218,13 @@ function renderPresetList() {
 }
 
 // Mise à jour de l'aperçu JSON en temps réel sur modification du formulaire preset
-if (document.getElementById('presetForm')) {
-    document.getElementById('presetForm').addEventListener('input', window.updateJsonPreview);
-}
+// Désactivé: l'élément jsonPreview n'existe pas dans le HTML
+// if (document.getElementById('presetForm')) {
+//     document.getElementById('presetForm').addEventListener('input', window.updateJsonPreview);
+// }
 
 document.addEventListener('DOMContentLoaded', function () {
-    updateJsonPreview();
+    // updateJsonPreview();  // Disabled - element doesn't exist
     document.getElementById('defaultTab').click();
 });
 
@@ -237,71 +242,198 @@ async function checkAdminLogTab() {
             document.getElementById('adminLogTab').style.display = '';
         }
     } catch {}
-    // --- GESTION DES LOGS (Admin OTEA vs Serveur Arma) ---
-    let currentLogTab = 'admin';
+}
 
-    window.switchLogTab = function switchLogTab(tab) {
-        currentLogTab = tab;
-        document.getElementById('logTabAdmin').style.background = tab === 'admin' ? 'var(--accent)' : '#555';
-        document.getElementById('logTabAdmin').style.color = tab === 'admin' ? 'black' : 'white';
-        document.getElementById('logTabArma').style.background = tab === 'arma' ? 'var(--accent)' : '#555';
-        document.getElementById('logTabArma').style.color = tab === 'arma' ? 'black' : 'white';
-        document.getElementById('logRefreshBtn').textContent = tab === 'admin' ? 'Rafraîchir Admin Log' : 'Rafraîchir Logs Arma';
+// --- GESTION DES LOGS (Admin OTEA vs Serveur Arma) ---
+let currentLogTab = 'admin';
+let currentArmaLogFilter = null;
+let currentArmaLogPreset = null;
 
-        if (tab === 'admin') {
-            loadAdminLog();
-        } else {
-            loadArmaServerLog();
-        }
-    };
+window.switchLogTab = function switchLogTab(tab) {
+    currentLogTab = tab;
+    document.getElementById('logTabAdmin').style.background = tab === 'admin' ? 'var(--accent)' : '#555';
+    document.getElementById('logTabAdmin').style.color = tab === 'admin' ? 'black' : 'white';
+    document.getElementById('logTabArma').style.background = tab === 'arma' ? 'var(--accent)' : '#555';
+    document.getElementById('logTabArma').style.color = tab === 'arma' ? 'black' : 'white';
+    document.getElementById('logRefreshBtn').textContent = tab === 'admin' ? 'Rafraîchir Admin Log' : 'Rafraîchir Logs Arma';
+    
+    // Afficher/cacher les filtres Arma
+    document.getElementById('armaLogFilters').style.display = tab === 'arma' ? 'block' : 'none';
 
-    window.loadArmaServerLog = async function loadArmaServerLog() {
-        const logConsole = document.getElementById('logConsole');
-        logConsole.innerHTML = '⏳ Chargement des logs du serveur Arma...\n';
-        try {
-            const res = await apiRequest('/arma-server-log');
-            if (res && res.log) {
-                logConsole.innerHTML = res.log;
-                if (!res.available) {
-                    logConsole.innerHTML = `⚠️ ATTENTION: Logs du serveur Arma non trouvés\n\n${res.log}`;
-                }
-                logConsole.scrollTop = logConsole.scrollHeight;
-            } else {
-                logConsole.innerHTML = '❌ Erreur: Impossible de charger les logs du serveur Arma';
-            }
-        } catch (err) {
-            logConsole.innerHTML = `❌ Erreur réseau: ${err.message}`;
-        }
-    };
+    if (tab === 'admin') {
+        loadAdminLog();
+    } else {
+        loadArmaServerLog();
+    }
+};
 
-
-    const tbody = document.getElementById('adminLogTable');
-    tbody.innerHTML = '<tr><td colspan="5">Chargement...</td></tr>';
+window.loadArmaServerLog = async function loadArmaServerLog() {
+    const logConsole = document.getElementById('logConsole');
+    logConsole.innerHTML = '⏳ Chargement des logs du serveur Arma...\n';
     try {
-        const res = await fetch('/api/admin-log');
-        const logs = await res.json();
-        if (!Array.isArray(logs) || logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">Aucune activité enregistrée.</td></tr>';
+        // Récupérer le premier serveur en ligne
+        const serversRes = await apiRequest('/servers');
+        const servers = serversRes.data?.servers || [];
+        if (!servers || servers.length === 0) {
+            logConsole.innerHTML = '❌ Aucun serveur Arma en cours d\'exécution';
             return;
         }
-        tbody.innerHTML = logs.reverse().map(log => `
-            <tr>
-                <td>${log.date.replace('T', ' ').substring(0, 19)}</td>
-                <td>${log.user}</td>
-                <td>${log.action}</td>
-                <td><pre style="white-space:pre-wrap;max-width:350px;">${JSON.stringify(log.details, null, 2)}</pre></td>
-                <td>${log.ip || ''}</td>
-            </tr>
-        `).join('');
-    } catch {
-        tbody.innerHTML = '<tr><td colspan="5">Erreur de chargement du journal.</td></tr>';
+        
+        const port = servers[0].port;
+        
+        // Charger les logs du serveur
+        let url = `/servers/${port}/logs/stream?since=5`;
+        const res = await apiRequest(url);
+        
+        if (res && res.data && Array.isArray(res.data.logs)) {
+            displayArmaLogs(res.data.logs);
+        } else {
+            logConsole.innerHTML = '❌ Erreur: Impossible de charger les logs du serveur Arma';
+        }
+    } catch (err) {
+        logConsole.innerHTML = `❌ Erreur réseau: ${err.message}`;
     }
+};
+
+function displayArmaLogs(logs) {
+    const logConsole = document.getElementById('logConsole');
+    if (!logs || logs.length === 0) {
+        logConsole.innerHTML = '📭 Aucun log à afficher';
+        return;
+    }
+    
+    const lines = logs.map(log => {
+        const time = new Date(log.timestamp).toLocaleTimeString('fr-FR');
+        const text = log.line || '';
+        const level = log.level || 'INFO';
+        
+        // Colorer selon le niveau
+        let color = '#00ff00'; // INFO = vert
+        if (level === 'ERROR') color = '#ff3333';
+        else if (level === 'WARN') color = '#ffff00';
+        else if (level === 'DEBUG') color = '#888888';
+        
+        return `<span style="color:#888;">[${time}]</span> <span style="color:${color};">${text}</span>`;
+    }).join('\n');
+    
+    logConsole.innerHTML = lines;
+    logConsole.scrollTop = logConsole.scrollHeight;
 }
+
+window.filterArmaLogs = async function filterArmaLogs(preset) {
+    const logConsole = document.getElementById('logConsole');
+    logConsole.innerHTML = '⏳ Filtrage des logs...\n';
+    try {
+        // Récupérer le premier serveur en ligne
+        const serversRes = await apiRequest('/servers');
+        const servers = serversRes.data?.servers || [];
+        if (!servers || servers.length === 0) {
+            logConsole.innerHTML = '❌ Aucun serveur Arma en cours d\'exécution';
+            return;
+        }
+        
+        const port = servers[0].port;
+        
+        // Construire l'URL avec le preset
+        let url = `/servers/${port}/logs/stream?since=10`;
+        if (preset) {
+            url += `&preset=${preset}`;
+            currentArmaLogPreset = preset;
+            currentArmaLogFilter = null;
+        } else {
+            currentArmaLogPreset = null;
+            currentArmaLogFilter = null;
+        }
+        
+        const res = await apiRequest(url);
+        
+        if (res && res.data && Array.isArray(res.data.logs)) {
+            displayArmaLogs(res.data.logs);
+        } else {
+            logConsole.innerHTML = '❌ Erreur lors du filtrage des logs';
+        }
+    } catch (err) {
+        logConsole.innerHTML = `❌ Erreur réseau: ${err.message}`;
+    }
+};
+
+window.searchArmaLogs = async function searchArmaLogs() {
+    const searchInput = document.getElementById('armaLogFilter');
+    const filterText = searchInput.value.trim();
+
+    if (!filterText) {
+        alert('Veuillez entrer un texte de recherche');
+        return;
+    }
+
+    const logConsole = document.getElementById('logConsole');
+    logConsole.innerHTML = '⏳ Recherche des logs...\n';
+    try {
+        // Récupérer le premier serveur en ligne
+        const serversRes = await apiRequest('/servers');
+        const servers = serversRes.data?.servers || [];
+        if (!servers || servers.length === 0) {
+            logConsole.innerHTML = '❌ Aucun serveur Arma en cours d\'exécution';
+            return;
+        }
+        
+        const port = servers[0].port;
+        
+        // Construire l'URL avec le filtre de recherche
+        const url = `/servers/${port}/logs/stream?filter=${encodeURIComponent(filterText)}&since=30`;
+        
+        const res = await apiRequest(url);
+        
+        if (res && res.data && Array.isArray(res.data.logs)) {
+            currentArmaLogFilter = filterText;
+            currentArmaLogPreset = null;
+            displayArmaLogs(res.data.logs);
+            if (res.data.logs.length === 0) {
+                document.getElementById('logConsole').innerHTML = `📭 Aucun log trouvé contenant: <strong>${filterText}</strong>`;
+            }
+        } else {
+            logConsole.innerHTML = '❌ Erreur lors de la recherche';
+        }
+    } catch (err) {
+        logConsole.innerHTML = `❌ Erreur réseau: ${err.message}`;
+    }
+};
+
+window.loadAdminLog = async function loadAdminLog() {
+    const logConsole = document.getElementById('logConsole');
+    logConsole.innerHTML = 'Chargement...';
+    try {
+        const auth = btoa('admin:admin1234');
+        const res = await fetch('/api/logs', {
+            headers: { 'Authorization': `Basic ${auth}` }
+        });
+        const data = await res.json();
+        const logs = data.data && Array.isArray(data.data) ? data.data : [];
+        if (!Array.isArray(logs) || logs.length === 0) {
+            logConsole.innerHTML = 'Aucune activité enregistrée.';
+            return;
+        }
+        
+        // Format pour affichage en console (pas en tableau)
+        const lines = logs.reverse().map(log => {
+            const time = log.date ? log.date.replace('T', ' ').substring(0, 19) : '';
+            return `[${time}] ${log.user} : ${log.action}`;
+        }).join('\n');
+        
+        logConsole.innerHTML = lines;
+        logConsole.scrollTop = logConsole.scrollHeight;
+    } catch (err) {
+        logConsole.innerHTML = `Erreur: ${err.message}`;
+    }
+};
 
 // --- CHANGEMENT DE MOT DE PASSE ---
 async function checkDefaultPassword() {
     try {
-        const res = await fetch('/admin');
+        const auth = btoa('admin:admin1234');
+        const res = await fetch('/api/admin/health', {
+            headers: { 'Authorization': `Basic ${auth}` }
+        });
         if (res.ok) {
             document.getElementById('defaultPwdWarning').style.display = '';
         }
@@ -440,9 +572,9 @@ async function confirmPortAndLaunch() {
     closePortModal();
 
     appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${newPort}...`);
-    const result = await apiRequest('/launch', 'POST', preset);
+    const result = await apiRequest('/servers', 'POST', {port: newPort, name: preset.title});
 
-    if (result) {
+    if (result && result.success) {
         appendLog(`✅ Serveur lancé avec succès sur le port ${newPort}!`);
     }
 
@@ -450,43 +582,51 @@ async function confirmPortAndLaunch() {
 }
 
 async function launchServer(id) {
-    // Afficher le modal au lieu de lancer directement
-    showPortConfigModal(id);
+    // Lancer directement sans modal
+    const preset = (window._allPresets || []).find(p => p.id === id);
+    if (!preset) {return appendLog('Preset introuvable');}
+
+    appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${preset.port}...`);
+    const result = await apiRequest('/servers', 'POST', {port: preset.port, name: preset.title});
+
+    if (result && result.success) {
+        appendLog(`✅ Serveur lancé avec succès sur le port ${preset.port}!`);
+    }
+
+    renderPresetList();
 }
 
 async function stopServer(id) {
     const preset = (window._allPresets || []).find(p => p.id === id);
     if (!preset) {return appendLog('Preset introuvable');}
     appendLog('Arrêt du serveur sur le port ' + preset.port + '...');
-    await apiRequest('/stop', 'POST', { port: preset.port });
+    await apiRequest(`/servers/${preset.port}`, 'DELETE');
     renderPresetList();
 }
 
 // --- GESTION ARMA REFORGER SERVER ---
 async function loadArmaServerInfo() {
     // Récupère version installée, version dispo, log
-    const info = await apiRequest('/arma-server/info');
-    if (!info) {return;}
-    document.getElementById('armaInstalledVersion').textContent = info.installedVersion || 'Inconnue';
+    const info = await apiRequest('/admin/arma-version');
+    if (!info || !info.data) {return;}
+    document.getElementById('armaInstalledVersion').textContent = info.data.installedVersion || 'Inconnue';
     // Indicateur nouvelle version
-    if (info.latestVersion && info.installedVersion && info.latestVersion !== info.installedVersion) {
+    if (info.data.updateAvailable) {
         document.getElementById('armaUpdateIndicator').style.display = '';
-        document.getElementById('armaUpdateIndicator').textContent = `Nouvelle version disponible : ${info.latestVersion}`;
+        document.getElementById('armaUpdateIndicator').textContent = `Nouvelle version disponible : ${info.data.latestVersion}`;
     } else {
         document.getElementById('armaUpdateIndicator').style.display = 'none';
     }
-    // Log des mises à jour
-    document.getElementById('armaUpdateLog').innerHTML = (info.updateLog || []).map(e =>
-        `<div>[${e.date}] ${e.status} : ${e.message}</div>`
-    ).join('') || '<span style="color:#888;">Aucune action enregistrée</span>';
+    // Log des mises à jour  
+    document.getElementById('armaUpdateLog').innerHTML = '<span style="color:#888;">Log actualisé</span>';
 }
 
 async function updateArmaServer() {
     document.getElementById('armaUpdateBtn').disabled = true;
     document.getElementById('armaUpdateMsg').textContent = 'Mise à jour en cours...';
     try {
-        const res = await apiRequest('/api/update-server', 'POST');
-        document.getElementById('armaUpdateMsg').textContent = res && res.message ? res.message : 'Erreur lors de la mise à jour';
+        const res = await apiRequest('/updates/trigger', 'POST', {});
+        document.getElementById('armaUpdateMsg').textContent = res && res.message ? res.message : 'Mise à jour lancée';
         showNotification('✓ Mise à jour du serveur Arma Reforger terminée !', 'success');
     } catch (e) {
         document.getElementById('armaUpdateMsg').textContent = 'Erreur : ' + e.message;
@@ -503,7 +643,7 @@ async function restartOTEA() {
     document.getElementById('otearestartBtn').disabled = true;
     document.getElementById('otearestartMsg').textContent = 'Redémarrage en cours...';
     try {
-        const res = await apiRequest('/api/restart-otea', 'POST');
+        const res = await apiRequest('/admin/restart-all', 'POST');
         document.getElementById('otearestartMsg').textContent = 'Redémarrage initié. La page va se rafraîchir...';
         showNotification('⟳ Redémarrage d\'OTEA en cours...', 'warning');
         setTimeout(() => {
@@ -521,16 +661,13 @@ async function loadServersStatus() {
     const tbody = document.getElementById('serversStatusTable');
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>';
     try {
-        const res = await apiRequest('/api/servers-status');
-        if (!res || !Array.isArray(res)) {
+        const res = await apiRequest('/servers');
+        const serversList = res.data && res.data.servers ? res.data.servers : [];
+        if (!serversList || serversList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">Aucun serveur en cours d\'exécution</td></tr>';
             return;
         }
-        if (res.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;color:#888;">Aucun serveur en cours d\'exécution</td></tr>';
-            return;
-        }
-        tbody.innerHTML = res.map(server => {
+        tbody.innerHTML = serversList.map(server => {
             const statusColor = server.running ? '#27ae60' : '#c0392b';
             const statusText = server.running ? '🟢 EN LIGNE' : '🔴 OFFLINE';
             return `
@@ -743,7 +880,7 @@ async function manualBanPlayer() {
 // Charger les serveurs disponibles pour le sélecteur
 async function loadServerPortsForPlayers() {
     try {
-        const presets = await apiRequest('/api/presets');
+        const presets = await apiRequest('/presets');
         if (!presets || !Array.isArray(presets)) {return;}
 
         const select = document.getElementById('playerServerPort');
@@ -775,7 +912,10 @@ window.addEventListener('DOMContentLoaded', function () {
  */
 async function checkArmaUpdates() {
     try {
-        const response = await fetch('/api/arma-server/check-updates');
+        const auth = btoa('admin:admin1234');
+        const response = await fetch('/api/updates/check', {
+            headers: { 'Authorization': `Basic ${auth}` }
+        });
         if (!response.ok) {
             throw new Error('Failed to check updates');
         }

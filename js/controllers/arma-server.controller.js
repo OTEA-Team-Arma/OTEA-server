@@ -1,75 +1,86 @@
 /**
- * controllers/arma-server.controller.js
- * Contrôleur pour les opérations du serveur Arma
- * Orchestrate: routes -> business logic (services) -> response
+ * arma-server.controller.js
+ * 
+ * Contrôleur pour les opérations du serveur Arma Reforger
+ * Responsabilités:
+ * - Valider les inputs HTTP
+ * - Orchestrer les services
+ * - Formater les réponses
+ * - Gérer les erreurs HTTP
+ * 
+ * Pattern: Route → Controller → Service → Response
  */
 
-const { success, error } = require('../models/responses');
-const constants = require('../models/constants');
+const ArmaServerService = require('../services/arma-server.service');
+const PresetsService = require('../services/presets.service');
+const LogService = require('../services/log.service');
+const { success, error, validationError } = require('../models/responses');
 
+/**
+ * ArmaServerController
+ * Contrôle tous les endpoints liés au serveur Arma
+ */
 class ArmaServerController {
     /**
-     * GET /api/arma-server/status
-     * Récupère le statut du serveur
-     */
-    static async getStatus(req, res) {
-        try {
-            // TODO: Call ArmaServerService.getStatus()
-            // For now, return placeholder
-            return res.json(success({
-                running: false,
-                pid: null,
-                uptime: 0,
-                players: 0,
-                missions: []
-            }, 'Server status retrieved'));
-        } catch (err) {
-            return res.status(500).json(
-                error('Failed to retrieve server status', 'STATUS_ERROR', err.message)
-            );
-        }
-    }
-
-    /**
-     * GET /api/arma-server/check-updates
-     * Vérifie les mises à jour
-     */
-    static async checkUpdates(req, res) {
-        try {
-            // TODO: Call ArmaVersionService.isUpdateAvailable()
-            return res.json(success({
-                updateAvailable: false,
-                currentVersion: null,
-                latestVersion: null
-            }, 'Update check completed'));
-        } catch (err) {
-            return res.status(500).json(
-                error('Failed to check for updates', 'UPDATE_CHECK_ERROR', err.message)
-            );
-        }
-    }
-
-    /**
-     * POST /api/arma-server/start
-     * Démarre le serveur
-     * Requires: authentication
+     * POST /api/servers
+     * Lance un nouveau serveur Arma
+     * 
+     * @param {Request} req - { body: { port, presetId, config } }
+     * @param {Response} res
      */
     static async startServer(req, res) {
         try {
-            // TODO: Call ArmaServerService.start()
-            // For now, validate auth middleware ran
-            if (!req.user) {
-                return res.status(401).json(
-                    error('Unauthorized', 'AUTH_REQUIRED')
+            const { port, presetId, config } = req.body;
+
+            // Validation
+            if (!port || !config) {
+                await LogService.logAction('server-start-invalid', req.user?.name, {
+                    ip: req.ip,
+                    reason: 'Missing port or config'
+                });
+                return res.status(400).json(
+                    validationError(['port and config are required'])
                 );
             }
 
-            return res.json(success({
-                action: 'start',
-                status: 'initiated',
-                pid: null
-            }, 'Server start initiated'));
+            // Vérifier port valide
+            if (port < 2301 || port > 65535) {
+                await LogService.logAction('server-start-invalid', req.user?.name, {
+                    ip: req.ip,
+                    port: port,
+                    reason: 'Invalid port range'
+                });
+                return res.status(400).json(
+                    validationError(['port must be between 2301 and 65535'])
+                );
+            }
+
+            // Vérifier pas déjà en cours
+            if (ArmaServerService.isRunning(port)) {
+                return res.status(409).json(
+                    error('Server already running on that port', 'SERVER_RUNNING')
+                );
+            }
+
+            // Lancer le serveur
+            const result = await ArmaServerService.start({ port, ...config }, {
+                osAbstraction: req.app.locals.osAbstraction
+            });
+
+            // Log action
+            await LogService.logAction('server-started', req.user?.name, {
+                ip: req.ip,
+                port: port,
+                presetId: presetId || null,
+                pid: result.pid
+            });
+
+            return res.json(success(result, 'Server started successfully'));
         } catch (err) {
+            await LogService.logAction('server-start-error', req.user?.name, {
+                ip: req.ip,
+                error: err.message
+            });
             return res.status(500).json(
                 error('Failed to start server', 'START_ERROR', err.message)
             );
@@ -77,24 +88,206 @@ class ArmaServerController {
     }
 
     /**
-     * POST /api/arma-server/stop
-     * Arrête le serveur
-     * Requires: authentication
+     * GET /api/servers/:port
+     * Récupère le statut d'un serveur spécifique
      */
-    static async stopServer(req, res) {
+    static async getServerStatus(req, res) {
         try {
-            // TODO: Call ArmaServerService.stop()
-            if (!req.user) {
-                return res.status(401).json(
-                    error('Unauthorized', 'AUTH_REQUIRED')
+            const { port } = req.params;
+
+            if (!port) {
+                return res.status(400).json(
+                    error('Port is required', 'MISSING_PORT')
                 );
             }
 
-            return res.json(success({
-                action: 'stop',
-                status: 'initiated'
-            }, 'Server stop initiated'));
+            const status = ArmaServerService.getStatus(parseInt(port));
+
+            if (!status) {
+                return res.status(404).json(
+                    error('Server not found', 'NOT_FOUND', `No server on port ${port}`)
+                );
+            }
+
+            return res.json(success(status, 'Server status retrieved'));
         } catch (err) {
+            return res.status(500).json(
+                error('Failed to get server status', 'STATUS_ERROR', err.message)
+            );
+        }
+    }
+
+    /**
+     * GET /api/servers
+     * Récupère le statut de TOUS les serveurs
+     */
+    static async getAllServers(req, res) {
+        try {
+            const servers = ArmaServerService.getAllStatus();
+
+            return res.json(success(
+                {
+                    count: servers.length,
+                    servers: servers
+                },
+                `Retrieved ${servers.length} running server(s)`
+            ));
+        } catch (err) {
+            return res.status(500).json(
+                error('Failed to get servers', 'LIST_ERROR', err.message)
+            );
+        }
+    }
+
+    /**
+     * POST /api/servers/:port/restart
+     * Redémarre un serveur (stop + start)
+     */
+    static async restartServer(req, res) {
+        try {
+            const { port } = req.params;
+
+            if (!port) {
+                return res.status(400).json(
+                    error('Port is required', 'MISSING_PORT')
+                );
+            }
+
+            if (!ArmaServerService.isRunning(port)) {
+                return res.status(404).json(
+                    error('Server not found', 'NOT_RUNNING', `No server on port ${port}`)
+                );
+            }
+
+            const result = await ArmaServerService.restart(
+                parseInt(port),
+                { osAbstraction: req.app.locals.osAbstraction }
+            );
+
+            await LogService.logAction('server-restarted', req.user?.name, {
+                ip: req.ip,
+                port: port,
+                pid: result.pid
+            });
+
+            return res.json(success(result, 'Server restarted successfully'));
+        } catch (err) {
+            await LogService.logAction('server-restart-error', req.user?.name, {
+                ip: req.ip,
+                port: req.params.port,
+                error: err.message
+            });
+            return res.status(500).json(
+                error('Failed to restart server', 'RESTART_ERROR', err.message)
+            );
+        }
+    }
+
+    /**
+     * PUT /api/servers/:port/config
+     * Met à jour la configuration d'un serveur
+     */
+    static async updateServerConfig(req, res) {
+        try {
+            const { port } = req.params;
+            const { config } = req.body;
+
+            if (!port || !config) {
+                return res.status(400).json(
+                    validationError(['port and config are required'])
+                );
+            }
+
+            if (!ArmaServerService.isRunning(port)) {
+                return res.status(404).json(
+                    error('Server not found', 'NOT_RUNNING')
+                );
+            }
+
+            await ArmaServerService.updateConfig(parseInt(port), config);
+
+            await LogService.logAction('server-config-updated', req.user?.name, {
+                ip: req.ip,
+                port: port
+            });
+
+            return res.json(success({ port, config }, 'Config updated successfully'));
+        } catch (err) {
+            await LogService.logAction('server-config-error', req.user?.name, {
+                ip: req.ip,
+                port: req.params?.port,
+                error: err.message
+            });
+            return res.status(500).json(
+                error('Failed to update config', 'CONFIG_ERROR', err.message)
+            );
+        }
+    }
+
+    /**
+     * GET /api/servers/info/:port
+     * Récupère les infos détaillées d'un serveur
+     */
+    static async getServerInfo(req, res) {
+        try {
+            const { port } = req.params;
+
+            if (!port) {
+                return res.status(400).json(
+                    error('Port is required', 'MISSING_PORT')
+                );
+            }
+
+            const info = ArmaServerService.getDetailedInfo(parseInt(port));
+
+            if (!info) {
+                return res.status(404).json(
+                    error('Server not found', 'NOT_FOUND')
+                );
+            }
+
+            return res.json(success(info, 'Server info retrieved'));
+        } catch (err) {
+            return res.status(500).json(
+                error('Failed to get server info', 'INFO_ERROR', err.message)
+            );
+        }
+    }
+
+    /**
+     * DELETE /api/servers/:port
+     * Arrête un serveur spécifique
+     */
+    static async stopServer(req, res) {
+        try {
+            const { port } = req.params;
+
+            if (!port) {
+                return res.status(400).json(
+                    error('Port is required', 'MISSING_PORT')
+                );
+            }
+
+            if (!ArmaServerService.isRunning(port)) {
+                return res.status(404).json(
+                    error('Server not found', 'NOT_RUNNING')
+                );
+            }
+
+            const result = await ArmaServerService.stop(parseInt(port));
+
+            await LogService.logAction('server-stopped', req.user?.name, {
+                ip: req.ip,
+                port: port
+            });
+
+            return res.json(success(result, 'Server stopped successfully'));
+        } catch (err) {
+            await LogService.logAction('server-stop-error', req.user?.name, {
+                ip: req.ip,
+                port: req.params?.port,
+                error: err.message
+            });
             return res.status(500).json(
                 error('Failed to stop server', 'STOP_ERROR', err.message)
             );
@@ -102,26 +295,25 @@ class ArmaServerController {
     }
 
     /**
-     * POST /api/arma-server/update
-     * Déclenche une mise à jour
-     * Requires: authentication
+     * GET /api/servers/health
+     * Health check pour tous les serveurs
      */
-    static async updateServer(req, res) {
+    static async healthCheck(req, res) {
         try {
-            // TODO: Call UpdateService.triggerUpdate()
-            if (!req.user) {
-                return res.status(401).json(
-                    error('Unauthorized', 'AUTH_REQUIRED')
-                );
-            }
+            const servers = ArmaServerService.getAllStatus();
+            const healthy = servers.length > 0;
 
-            return res.json(success({
-                action: 'update',
-                status: 'initiated'
-            }, 'Server update initiated'));
+            return res.json(success(
+                {
+                    healthy: healthy,
+                    serversRunning: servers.length,
+                    servers: servers
+                },
+                healthy ? 'All servers healthy' : 'No servers running'
+            ));
         } catch (err) {
             return res.status(500).json(
-                error('Failed to update server', 'UPDATE_ERROR', err.message)
+                error('Health check failed', 'HEALTH_CHECK_ERROR', err.message)
             );
         }
     }

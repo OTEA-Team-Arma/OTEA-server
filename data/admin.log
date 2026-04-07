@@ -1,1 +1,155 @@
-[]
+[
+  {
+    "date": "2026-04-07T19:54:21.187Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:54:26.615Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:54:32.376Z",
+    "user": "admin",
+    "action": "update-triggered",
+    "details": {
+      "ip": "::1",
+      "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",
+      "armaPath": "C:\\Arma3DS"
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:54:42.427Z",
+    "user": "admin",
+    "action": "update-error",
+    "details": {
+      "ip": "::1",
+      "error": "Update failed after 3 attempts. Last error: Update failed: SteamCMD failed: Command failed: \"C:\\SteamCMD\\steamcmd.exe\" +login anonymous +app_update 1874900 -beta server validate -dir \"C:\\Arma3DS\" +quit\nLe chemin d'acc�s sp�cifi� est introuvable.\r\n"
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:57:09.344Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:57:14.118Z",
+    "user": "admin",
+    "action": "update-triggered",
+    "details": {
+      "ip": "::1",
+      "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",
+      "armaPath": "C:\\Arma3DS"
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T19:57:14.120Z",
+    "user": "admin",
+    "action": "update-completed",
+    "details": {
+      "ip": "::1",
+      "version": "SIMULATION-1775591834119",
+      "attempt": 1
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T20:00:22.823Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T20:00:29.305Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T20:00:37.064Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T20:01:24.669Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T20:51:02.503Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T21:02:47.734Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T21:09:36.202Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-07T21:10:26.169Z",
+    "user": "admin",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  }
+]

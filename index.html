@@ -182,6 +182,28 @@
                     </div>
 
                     <div class="card" style="background:var(--card);border-radius:10px;padding:15px;box-shadow:0 2px 12px #0003;">
+                        <!-- Filtres pour Logs Arma (affichés seulement côté Arma) -->
+                        <div id="armaLogFilters" style="display:none;margin-bottom:15px;background:#1a1a1a;padding:12px;border-radius:6px;border:1px solid #333;">
+                            <div style="margin-bottom:10px;">
+                                <label style="color:#888;font-size:12px;display:block;margin-bottom:8px;">🔍 Filtrer par preset :</label>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                    <button class="btn" onclick="filterArmaLogs('tilw')" style="font-size:11px;padding:6px 12px;background:#444;border:1px solid #666;">TILW</button>
+                                    <button class="btn" onclick="filterArmaLogs('debugIA')" style="font-size:11px;padding:6px 12px;background:#444;border:1px solid #666;">[Debug IA LOD]</button>
+                                    <button class="btn" onclick="filterArmaLogs('error')" style="font-size:11px;padding:6px 12px;background:#c0392b;border:1px solid #952219;">ERROR</button>
+                                    <button class="btn" onclick="filterArmaLogs('warning')" style="font-size:11px;padding:6px 12px;background:#e67e22;border:1px solid #b86414;">WARNING</button>
+                                    <button class="btn" onclick="filterArmaLogs('script')" style="font-size:11px;padding:6px 12px;background:#444;border:1px solid #666;">SCRIPT</button>
+                                    <button class="btn" onclick="filterArmaLogs(null)" style="font-size:11px;padding:6px 12px;background:var(--accent);color:black;border:none;">Tous les logs</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="color:#888;font-size:12px;display:block;margin-bottom:8px;">🔎 Ou rechercher :</label>
+                                <div style="display:flex;gap:6px;">
+                                    <input type="text" id="armaLogFilter" placeholder="Chercher du texte..." style="flex:1;padding:8px;background:#2a2a2a;border:1px solid #444;color:#fff;border-radius:4px;font-family:'Courier New',monospace;font-size:11px;" />
+                                    <button class="btn btn-edit" onclick="searchArmaLogs()" style="font-size:11px;padding:8px 15px;">Chercher</button>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="logConsole" style="background:#000;color:#00ff00;padding:12px;height:350px;overflow-y:auto;font-family:'Courier New',monospace;border:1px solid #444;font-size:12px;line-height:1.4;border-radius:4px;margin-bottom:10px;white-space:pre-wrap;word-break:break-word;">Prêt pour la réception des logs...</div>
                         <div style="display:flex;gap:5px;">
                             <button class="btn btn-delete" onclick="document.getElementById('logConsole').innerHTML=''" style="font-size:11px;padding:6px 10px;flex:1;">Effacer</button>
@@ -283,7 +305,7 @@
     <!-- Section Journal d'activité supprimée (historique non essentiel) -->
 
     <!-- MODAL: Configuration du port avant lancement -->
-    <div id="portConfigModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;">
+    <div id="portConfigModal" style="display:none !important;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:9999;align-items:center;justify-content:center;">
         <div style="background:var(--card);border-radius:8px;padding:30px;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,0.9);border:2px solid var(--accent);">
             <h2 style="color:var(--accent);margin-top:0;margin-bottom:20px;">⚙️ Configuration du Port</h2>
             
