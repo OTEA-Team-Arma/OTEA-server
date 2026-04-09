@@ -151,5 +151,25 @@
       "updateAvailable": false
     },
     "ip": "::1"
+  },
+  {
+    "date": "2026-04-09T11:09:18.155Z",
+    "user": "unknown",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
+  },
+  {
+    "date": "2026-04-09T11:11:10.739Z",
+    "user": "unknown",
+    "action": "update-check",
+    "details": {
+      "ip": "::1",
+      "updateAvailable": false
+    },
+    "ip": "::1"
   }
 ]

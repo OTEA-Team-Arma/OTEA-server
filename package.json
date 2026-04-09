@@ -2,13 +2,13 @@
   "name": "otea-server",
   "version": "2.2.0",
   "description": "Web-based server manager for Arma Reforger",
-  "main": "js/server.js",
+  "main": "backend/server.js",
   "scripts": {
-    "start": "node js/server.js",
-    "dev": "nodemon js/server.js",
-    "lint": "eslint js/",
-    "lint:fix": "eslint js/ --fix",
-    "format": "prettier --write js/ index.html",
+    "start": "node backend/server.js",
+    "dev": "nodemon backend/server.js",
+    "lint": "eslint backend/",
+    "lint:fix": "eslint backend/ --fix",
+    "format": "prettier --write backend/ frontend/ index.html",
     "test": "jest",
     "test:watch": "jest --watch"
   },
@@ -22,10 +22,13 @@
   "license": "MIT",
   "dependencies": {
     "basic-auth": "^2.0.1",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
     "dotenv": "^16.0.3",
     "express": "^5.2.1",
     "express-rate-limit": "^8.3.2",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "eslint": "^8.40.0",
