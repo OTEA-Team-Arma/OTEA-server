@@ -169,7 +169,8 @@ window.getPresetFromForm = function getPresetFromForm() {
     return {
         id: document.getElementById('preset_title').dataset.id || ('preset_' + Date.now()),
         title: document.getElementById('preset_title').value,
-        port: document.getElementById('srv_port').value,
+        name: document.getElementById('preset_title').value,
+        port: parseInt(document.getElementById('srv_port').value),
         game: {
             name: document.getElementById('srv_name').value,
             maxPlayers: parseInt(document.getElementById('srv_players').value),
@@ -280,7 +281,7 @@ document.head.appendChild(style);
 // --- GESTION PRESETS ---
 async function loadPresets() {
     const presets = await apiRequest('/presets');
-    window._allPresets = presets || [];
+    window._allPresets = presets?.data || [];
     renderPresetList();
 }
 
