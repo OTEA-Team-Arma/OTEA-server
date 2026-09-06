@@ -64,7 +64,8 @@ class PresetsController {
      */
     static async savePreset(req, res) {
         try {
-            const { id, ...config } = req.body;
+            const { id } = req.body;
+            const config = req.body;
 
             if (!id || !config) {
                 return res.status(400).json(

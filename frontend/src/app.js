@@ -281,7 +281,7 @@ document.head.appendChild(style);
 // --- GESTION PRESETS ---
 async function loadPresets() {
     const presets = await apiRequest('/presets');
-    window._allPresets = presets?.data || [];
+    window._allPresets = presets?.data?.presets || [];
     renderPresetList();
 }
 

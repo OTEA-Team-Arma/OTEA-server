@@ -1,5 +1,6 @@
 {
   "id": "gm_arland_01",
+  "name": "Game Master - Arland",
   "title": "Game Master - Arland",
   "port": 2001,
   "mission": "{59AD593414377042}Missions/2_Arland_Conflict.conf",

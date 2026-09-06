@@ -160,6 +160,7 @@ class PresetsService {
 
             return preset;
         } catch (error) {
+            console.error('[PresetsService] savePreset error:', error.message, error.stack);
             await LogService.logAction('preset-save-error', 'system', {
                 presetId: presetId,
                 error: error.message
