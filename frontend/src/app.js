@@ -677,7 +677,11 @@ async function launchServer(id) {
     if (!preset) {return appendLog('Preset introuvable');}
 
     appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${preset.port}...`);
-    const result = await apiRequest('/servers', 'POST', {port: preset.port, name: preset.title});
+    const result = await apiRequest('/servers', 'POST', {
+        port: preset.port,
+        name: preset.title,
+        config: preset.game
+    });
 
     if (result && result.success) {
         appendLog(`✅ Serveur lancé avec succès sur le port ${preset.port}!`);
