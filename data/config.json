@@ -2,7 +2,7 @@
   "comment": "Configuration système OTEA-server (cross-platform)",
   "comment2": "Priorité: variables d'environnement > ce fichier > defaults",
   "serverRootPath": "C:\\Arma3DS",
-  "steamCmdPath": "C:\\SteamCMD\\steamcmd.exe",
+  "steamCmdPath": "C:\\steam cmd\\steamcmd.exe",
   "backendLog": true,
   "maxInstances": 5,
   "defaultRegion": "EU",

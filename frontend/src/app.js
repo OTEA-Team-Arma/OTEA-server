@@ -287,23 +287,26 @@ async function loadPresets() {
 
 function renderPresetList() {
     const presets = (window._allPresets || []);
-    const tbody = document.getElementById('presetList');
-    if (!presets.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;">Aucun preset enregistré</td></tr>';
-        return;
-    }
-    tbody.innerHTML = presets.map(p => `
-        <tr>
-            <td><a href="#" onclick="fillPresetForm(window._allPresets.find(x=>x.id==='${p.id}'))">${p.title}</a></td>
-            <td><span style="background:#3a4a5a;padding:4px 8px;border-radius:3px;font-weight:bold;color:var(--accent);">:${p.port}</span><br><small style="color:#888;font-size:11px;margin-top:3px;display:block;">➜ Configurable</small></td>
-            <td>${p.game.scenarioId.substring(0, 20)}...</td>
-            <td>
-                <button class="btn btn-start" onclick="launchServer('${p.id}')" title="Clique pour configurer le port">▶ Start</button>
-                <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
-                <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
-            </td>
-        </tr>
-    `).join('');
+    const tbodyElements = document.querySelectorAll('#presetList');
+
+    const content = !presets.length
+        ? '<tr><td colspan="4" style="text-align:center;color:#888;">Aucun preset enregistré</td></tr>'
+        : presets.map(p => `
+            <tr>
+                <td><a href="#" onclick="fillPresetForm(window._allPresets.find(x=>x.id==='${p.id}'))">${p.title}</a></td>
+                <td><span style="background:#3a4a5a;padding:4px 8px;border-radius:3px;font-weight:bold;color:var(--accent);">:${p.port}</span><br><small style="color:#888;font-size:11px;margin-top:3px;display:block;">➜ Configurable</small></td>
+                <td>${p.game.scenarioId.substring(0, 20)}...</td>
+                <td>
+                    <button class="btn btn-start" onclick="launchServer('${p.id}')" title="Clique pour configurer le port">▶ Start</button>
+                    <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
+                    <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
+                </td>
+            </tr>
+        `).join('');
+
+    tbodyElements.forEach(tbody => {
+        tbody.innerHTML = content;
+    });
 }
 
 // Mise à jour de l'aperçu JSON en temps réel sur modification du formulaire preset

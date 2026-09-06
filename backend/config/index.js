@@ -40,7 +40,7 @@ const DATABASE = {
 // ============================================================================
 const ARMA = {
     SERVER_ROOT: process.env.ARMA_SERVER_ROOT || 'C:\\Arma3DS',
-    STEAMCMD_PATH: process.env.STEAMCMD_PATH || 'C:\\SteamCMD\\steamcmd.exe',
+    STEAMCMD_PATH: process.env.STEAMCMD_PATH || 'C:\\steam cmd\\steamcmd.exe',
 };
 
 // ============================================================================
