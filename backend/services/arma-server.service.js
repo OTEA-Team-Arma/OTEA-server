@@ -73,8 +73,8 @@ class ArmaServerService {
                 publicAddress: '',
                 publicPort: config.port,
                 a2s: {
-                    address: '127.0.0.1',
-                    port: 17777
+                    address: '0.0.0.0',
+                    port: config.port + 1
                 },
                 game: {
                     name: config.name || 'OTEA Server',
