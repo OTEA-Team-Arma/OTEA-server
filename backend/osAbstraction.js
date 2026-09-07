@@ -346,12 +346,14 @@ function buildLaunchArgs(configPath, port) {
     const profilePath = 'C:\\Arma3DS\\ServerProfile';
     if (!fs.existsSync(profilePath)) {
         fs.mkdirSync(profilePath, { recursive: true });
+        console.log(`[osAbstraction] 📁 Created profile directory: ${profilePath}`);
     }
+
+    console.log(`[osAbstraction] 📋 Config file: ${configPath}`);
 
     const args = [
         '-config', configPath,
         '-port', String(port),
-        '-update',
         '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons',
         '-profile', profilePath
     ];

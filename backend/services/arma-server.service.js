@@ -1,50 +1,241 @@
 /**
  * arma-server.service.js
- * 
+ *
  * Service pour gérer le cycle de vie des serveurs Arma Reforger
+ * Architecture "config directe" : les presets sont des fichiers JSON au format Arma Reforger
  * Responsabilités:
- * - Lancer un serveur (spawn)
+ * - Sauvegarder/charger les configs ServerConfig_*.json
+ * - Lancer un serveur avec config directe (sans transformation)
  * - Arrêter un serveur (kill)
- * - Détecter les serveurs en route
- * - Récupérer les informations et statut
- * 
- * ⚠️ NOTE: Ce service n'a PAS de dépendances HTTP (req/res)
- * Il retourne des Promises et peut être utilisé n'importe où
+ * - Gérer l'état des serveurs en cours
  */
 
-const { spawn, exec } = require('child_process');
+const { spawn } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
 const fsSync = require('fs');
 const ArmaLogsService = require('./arma-logs.service');
 
+const PRESETS_DIR = path.join(__dirname, '..', '..', 'presets');
+
 /**
  * État en mémoire des serveurs lancés via OTEA
- * Structure: { port: { proc, startTime, config } }
+ * Structure: { port: { proc, startTime, configFile } }
  */
 const runningServers = {};
 
 /**
  * ArmaServerService
- * Gère le cycle de vie des serveurs Arma Reforger
+ * Gère le cycle de vie des serveurs Arma Reforger avec architecture config directe
  */
 class ArmaServerService {
     /**
-     * Lance un serveur Arma Reforger
-     * 
-     * @param {Object} config - Configuration du serveur
-     * @param {number} config.port - Port du serveur (2301-2305 généralement)
-     * @param {Object} options - Options de lancement
-     * @param {string} options.osAbstraction - Instance osAbstraction pour cross-platform
-     * @returns {Promise<Object>} { success: true, port, pid, message }
-     * @throws {Error} Si spawn échoue
+     * Génère un slug depuis un nom
+     * Ex: "Mon Serveur GM" → "mon_serveur_gm"
+     *
+     * @private
+     * @param {string} name - Nom du serveur
+     * @returns {string} Slug
      */
-    static async start(config, options = {}) {
-        if (!config || !config.port) {
-            throw new Error('Config must include port');
+    static _generateSlug(name) {
+        return name
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[̀-ͯ]/g, '')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    }
+
+    /**
+     * Sauvegarde une configuration serveur au format Arma Reforger
+     *
+     * @param {Object} data - Données du serveur
+     * @param {string} data.name - Nom du serveur
+     * @param {number} data.port - Port du serveur
+     * @param {string} data.scenarioId - ID du scénario
+     * @param {number} data.maxPlayers - Nombre max de joueurs
+     * @param {string} data.password - Mot de passe serveur (optionnel)
+     * @param {string} data.passwordAdmin - Mot de passe admin
+     * @param {Array<string>} data.admins - Liste des Steam IDs admin
+     * @param {Array<Object>} data.mods - Liste des mods
+     * @returns {Promise<Object>} { success: true, filename, path }
+     */
+    static async saveConfig(data) {
+        try {
+            // Créer le dossier presets s'il n'existe pas
+            if (!fsSync.existsSync(PRESETS_DIR)) {
+                await fs.mkdir(PRESETS_DIR, { recursive: true });
+            }
+
+            // Générer le slug et le nom de fichier
+            const slug = this._generateSlug(data.name);
+            const filename = `ServerConfig_${slug}.json`;
+            const filePath = path.join(PRESETS_DIR, filename);
+
+            // Nettoyer les mods (retirer guillemets parasites)
+            const cleanMods = (data.mods || []).map(mod => {
+                if (typeof mod === 'object' && mod.modId) {
+                    return {
+                        modId: mod.modId.replace(/"/g, '').trim(),
+                        name: mod.name || mod.modId
+                    };
+                }
+                return {
+                    modId: String(mod).replace(/"/g, '').trim(),
+                    name: String(mod)
+                };
+            });
+
+            // Construire la config au format Arma Reforger
+            const armaConfig = {
+                dedicatedServerId: slug,
+                region: data.region || 'EU',
+                bindAddress: '',
+                bindPort: data.port,
+                publicAddress: '',
+                publicPort: data.port,
+                a2s: {
+                    address: '0.0.0.0',
+                    port: data.port + 1
+                },
+                game: {
+                    name: data.name,
+                    password: data.password || '',
+                    passwordAdmin: data.passwordAdmin || '',
+                    admins: data.admins || [],
+                    scenarioId: data.scenarioId || '',
+                    maxPlayers: data.maxPlayers || 16,
+                    visible: true,
+                    crossPlatform: false,
+                    mods: cleanMods
+                }
+            };
+
+            // Sauvegarder le fichier
+            await fs.writeFile(filePath, JSON.stringify(armaConfig, null, 2));
+
+            console.log(`[ArmaServerService] ✅ Config saved: ${filePath}`);
+
+            return {
+                success: true,
+                filename: filename,
+                path: filePath
+            };
+        } catch (error) {
+            throw new Error(`Failed to save config: ${error.message}`);
+        }
+    }
+
+    /**
+     * Charge une configuration depuis un fichier
+     *
+     * @param {string} filename - Nom du fichier (ex: ServerConfig_xxx.json)
+     * @returns {Promise<Object>} Configuration JSON
+     */
+    static async loadConfig(filename) {
+        try {
+            const filePath = path.join(PRESETS_DIR, filename);
+
+            if (!fsSync.existsSync(filePath)) {
+                throw new Error(`Config file not found: ${filename}`);
+            }
+
+            const content = await fs.readFile(filePath, 'utf8');
+            const config = JSON.parse(content);
+
+            console.log(`[ArmaServerService] ✅ Config loaded: ${filePath}`);
+
+            return config;
+        } catch (error) {
+            throw new Error(`Failed to load config: ${error.message}`);
+        }
+    }
+
+    /**
+     * Liste toutes les configurations disponibles
+     *
+     * @returns {Promise<Array<Object>>} Liste des configs avec métadonnées
+     */
+    static async listConfigs() {
+        try {
+            if (!fsSync.existsSync(PRESETS_DIR)) {
+                await fs.mkdir(PRESETS_DIR, { recursive: true });
+                return [];
+            }
+
+            const files = await fs.readdir(PRESETS_DIR);
+            const configs = [];
+
+            for (const file of files) {
+                if (!file.startsWith('ServerConfig_') || !file.endsWith('.json')) {
+                    continue;
+                }
+
+                try {
+                    const config = await this.loadConfig(file);
+                    configs.push({
+                        filename: file,
+                        name: config.game?.name || 'Unknown',
+                        port: config.bindPort || 0,
+                        scenarioId: config.game?.scenarioId || '',
+                        maxPlayers: config.game?.maxPlayers || 0,
+                        mods: (config.game?.mods || []).length
+                    });
+                } catch (error) {
+                    console.warn(`[ArmaServerService] Failed to read ${file}: ${error.message}`);
+                }
+            }
+
+            console.log(`[ArmaServerService] ✅ Found ${configs.length} config(s)`);
+
+            return configs;
+        } catch (error) {
+            console.warn(`[ArmaServerService] listConfigs failed: ${error.message}`);
+            return [];
+        }
+    }
+
+    /**
+     * Supprime une configuration
+     *
+     * @param {string} filename - Nom du fichier à supprimer
+     * @returns {Promise<Object>} { success: true, filename }
+     */
+    static async deleteConfig(filename) {
+        try {
+            const filePath = path.join(PRESETS_DIR, filename);
+
+            if (!fsSync.existsSync(filePath)) {
+                throw new Error(`Config file not found: ${filename}`);
+            }
+
+            await fs.unlink(filePath);
+
+            console.log(`[ArmaServerService] ✅ Config deleted: ${filePath}`);
+
+            return {
+                success: true,
+                filename: filename
+            };
+        } catch (error) {
+            throw new Error(`Failed to delete config: ${error.message}`);
+        }
+    }
+
+    /**
+     * Lance un serveur Arma Reforger avec config directe
+     *
+     * @param {string} filename - Nom du fichier config (ex: ServerConfig_xxx.json)
+     * @param {number} port - Port du serveur
+     * @param {Object} options - Options de lancement
+     * @param {Object} options.osAbstraction - Instance osAbstraction
+     * @returns {Promise<Object>} { success: true, port, pid, message }
+     */
+    static async start(filename, port, options = {}) {
+        if (!filename || !port) {
+            throw new Error('filename and port are required');
         }
 
-        const port = config.port;
         const osAbstraction = options.osAbstraction;
 
         if (!osAbstraction) {
@@ -57,74 +248,45 @@ class ArmaServerService {
         }
 
         try {
-            // Écrire la config active pour ce serveur
-            const configPath = path.join(
-                __dirname,
-                '..',
-                '..',
-                `active_config_${port}.json`
-            );
-            // Construire le config au format Arma Reforger
-            const armaConfig = {
-                dedicatedServerId: config.dedicatedServerId || 'otea_server',
-                region: config.region || 'EU',
-                bindAddress: '',
-                bindPort: config.port,
-                publicAddress: '',
-                publicPort: config.port,
-                a2s: {
-                    address: '0.0.0.0',
-                    port: config.port + 1
-                },
-                game: {
-                    name: config.name || 'OTEA Server',
-                    password: config.password || '',
-                    passwordAdmin: config.passwordAdmin || '',
-                    admins: config.admins || [],
-                    scenarioId: config.scenarioId || config.game?.scenarioId || '',
-                    maxPlayers: config.maxPlayers || config.game?.maxPlayers || 16,
-                    visible: true,
-                    crossPlatform: false,
-                    mods: (config.mods || config.game?.mods || []).map(mod => {
-                        if (typeof mod === 'object' && mod.modId) {
-                            return { modId: mod.modId.replace(/"/g, '').trim(), name: mod.name || mod.modId };
-                        }
-                        return { modId: mod.replace(/"/g, '').trim(), name: mod };
-                    })
-                }
-            };
-            await fs.writeFile(
-                configPath,
-                JSON.stringify(armaConfig, null, 2)
-            );
+            // Charger la config pour validation
+            const config = await this.loadConfig(filename);
 
-            // Récupérer l'exécutable et les args depuis osAbstraction (cross-platform)
+            // Chemin absolu vers le fichier de config
+            const configPath = path.join(PRESETS_DIR, filename);
+
+            console.log(`[ArmaServerService] 🚀 Starting server on port ${port} with config: ${configPath}`);
+
+            // Récupérer l'exécutable et les args depuis osAbstraction
             const executable = osAbstraction.getServerExecutable();
             const args = osAbstraction.buildLaunchArgs(configPath, port);
 
-            // Lancer le serveur en mode détaché (peut survivre à fermeture OTEA)
-            // IMPORTANT: stdio: 'pipe' pour capturer les logs
+            console.log(`[ArmaServerService] 📋 Launch command: ${executable} ${args.join(' ')}`);
+
+            // Lancer le serveur en mode détaché
             const proc = spawn(executable, args, {
                 detached: true,
-                stdio: ['ignore', 'pipe', 'pipe']  // stdin: ignore, stdout/stderr: pipe pour logs
+                stdio: ['ignore', 'pipe', 'pipe']
             });
 
             // Tracker en mémoire
             runningServers[port] = {
                 proc,
                 startTime: Date.now(),
-                config: config,
-                configPath: configPath
+                configFile: filename,
+                config: config
             };
 
             // Attacher le logger pour capturer les logs
             ArmaLogsService.attachLogger(proc, port);
+
+            console.log(`[ArmaServerService] ✅ Server started: PID ${proc.pid}, port ${port}`);
 
             return {
                 success: true,
                 port: port,
                 pid: proc.pid,
                 message: `Server started on port ${port}`,
+                configFile: filename,
                 uptime: '0s'
             };
         } catch (error) {
@@ -133,12 +295,11 @@ class ArmaServerService {
     }
 
     /**
-     * Arrête un serveur Arma
-     * 
+     * Arrête un serveur par port
+     *
      * @param {number} port - Port du serveur à arrêter
      * @param {Object} options - Options (osAbstraction pour fallback)
      * @returns {Promise<Object>} { success: true, port, message }
-     * @throws {Error} Si arrêt échoue
      */
     static async stop(port, options = {}) {
         if (!port) {
@@ -146,15 +307,15 @@ class ArmaServerService {
         }
 
         const osAbstraction = options.osAbstraction;
+        const serverInfo = runningServers[port];
 
-        // Méthode 1: Utiliser le process stocké en mémoire
-        const proc = runningServers[port];
-
-        if (proc) {
+        if (serverInfo) {
             try {
-                // Tenter tuer le process group (-pid pour tout le groupe)
-                process.kill(-proc.proc.pid);
+                // Tuer le process par PID
+                process.kill(-serverInfo.proc.pid);
                 delete runningServers[port];
+
+                console.log(`[ArmaServerService] ✅ Server stopped: port ${port}`);
 
                 return {
                     success: true,
@@ -163,66 +324,64 @@ class ArmaServerService {
                     method: 'process.kill'
                 };
             } catch (error) {
-                console.warn(
-                    `[ArmaServerService.stop] Failed to kill process group: ${error.message}`
-                );
-                // Continuer au fallback
+                console.warn(`[ArmaServerService] Failed to kill process: ${error.message}`);
             }
         }
 
-        // Méthode 2: Utiliser osAbstraction pour cross-platform process kill
+        // Fallback: utiliser osAbstraction
         if (osAbstraction && typeof osAbstraction.killProcessByPort === 'function') {
             try {
                 const killed = await osAbstraction.killProcessByPort(port);
                 if (killed) {
                     delete runningServers[port];
+
+                    console.log(`[ArmaServerService] ✅ Server stopped (fallback): port ${port}`);
+
                     return {
                         success: true,
                         port: port,
                         message: `Server on port ${port} stopped (fallback)`,
-                        method: 'osAbstraction.killProcessByPort'
+                        method: 'osAbstraction'
                     };
                 }
             } catch (error) {
-                console.warn(
-                    `[ArmaServerService.stop] osAbstraction fallback failed: ${error.message}`
-                );
+                console.warn(`[ArmaServerService] Fallback failed: ${error.message}`);
             }
         }
 
-        // Aucun serveur trouvé ou erreur
         throw new Error(`Could not stop server on port ${port}`);
     }
 
     /**
-     * Récupère le statut d'un serveur spécifique
-     * 
+     * Récupère le statut d'un serveur
+     *
      * @param {number} port - Port du serveur
-     * @returns {Object|null} Infos du serveur ou null
+     * @returns {Object|null} Statut du serveur
      */
     static getStatus(port) {
-        const proc = runningServers[port];
-        if (!proc) {
+        const serverInfo = runningServers[port];
+        if (!serverInfo) {
             return null;
         }
 
-        const uptime = this._formatUptime(Date.now() - proc.startTime);
+        const uptime = this._formatUptime(Date.now() - serverInfo.startTime);
 
         return {
             port: port,
             running: true,
-            pid: proc.proc.pid,
+            pid: serverInfo.proc.pid,
             uptime: uptime,
-            startTime: new Date(proc.startTime).toISOString(),
-            config: proc.config,
+            startTime: new Date(serverInfo.startTime).toISOString(),
+            configFile: serverInfo.configFile,
+            config: serverInfo.config,
             source: 'OTEA'
         };
     }
 
     /**
-     * Récupère le statut de tous les serveurs lancés via OTEA
-     * 
-     * @returns {Array<Object>} Liste de tous les serveurs
+     * Récupère le statut de tous les serveurs
+     *
+     * @returns {Array<Object>} Liste des serveurs
      */
     static getAllStatus() {
         const servers = [];
@@ -235,6 +394,7 @@ class ArmaServerService {
                 pid: serverInfo.proc.pid,
                 uptime: uptime,
                 startTime: new Date(serverInfo.startTime).toISOString(),
+                configFile: serverInfo.configFile,
                 source: 'OTEA'
             });
         }
@@ -243,8 +403,8 @@ class ArmaServerService {
     }
 
     /**
-     * Vérifie si un serveur tourne sur le port spécifié
-     * 
+     * Vérifie si un serveur tourne sur le port
+     *
      * @param {number} port - Port à vérifier
      * @returns {boolean}
      */
@@ -254,7 +414,7 @@ class ArmaServerService {
 
     /**
      * Récupère le nombre de serveurs en route
-     * 
+     *
      * @returns {number}
      */
     static getRunningCount() {
@@ -262,10 +422,9 @@ class ArmaServerService {
     }
 
     /**
-     * Arrête tous les serveurs lancés via OTEA
-     * Utilisé lors de arrêt d'OTEA
-     * 
-     * @returns {Promise<Array>} Résultats d'arrêt pour chaque serveur
+     * Arrête tous les serveurs
+     *
+     * @returns {Promise<Array>} Résultats
      */
     static async stopAll() {
         const results = [];
@@ -287,104 +446,8 @@ class ArmaServerService {
     }
 
     /**
-     * Récupère la configuration active d'un serveur
-     * 
-     * @param {number} port - Port du serveur
-     * @returns {Object|null} Configuration ou null
-     */
-    static getConfig(port) {
-        const proc = runningServers[port];
-        return proc ? proc.config : null;
-    }
-
-    /**
-     * Met à jour la configuration d'un serveur running
-     * ⚠️ Nécessite généralement un redémarrage
-     * 
-     * @param {number} port - Port du serveur
-     * @param {Object} newConfig - Nouvelle configuration
-     * @returns {Promise<void>}
-     */
-    static async updateConfig(port, newConfig) {
-        const proc = runningServers[port];
-        if (!proc) {
-            throw new Error(`No server running on port ${port}`);
-        }
-
-        if (proc.configPath) {
-            await fs.writeFile(
-                proc.configPath,
-                JSON.stringify(newConfig, null, 2)
-            );
-            // Mettre à jour en mémoire aussi
-            proc.config = newConfig;
-        }
-    }
-
-    /**
-     * Redémarre un serveur (stop + start)
-     * 
-     * @param {number} port - Port du serveur
-     * @param {Object} options - Options (osAbstraction, etc)
-     * @returns {Promise<Object>} Résultat du restart
-     */
-    static async restart(port, options = {}) {
-        try {
-            const config = this.getConfig(port);
-            if (!config) {
-                throw new Error(`No server configuration for port ${port}`);
-            }
-
-            // Stop
-            await this.stop(port, options);
-
-            // Attendre un peu avant redeémarrer
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            // Start
-            const result = await this.start(config, options);
-            return {
-                success: true,
-                restart: true,
-                ...result
-            };
-        } catch (error) {
-            throw new Error(`Failed to restart server: ${error.message}`);
-        }
-    }
-
-    /**
-     * Récupère les infos système du serveur
-     * Format les infos depuis la config
-     * 
-     * @param {number} port - Port du serveur
-     * @returns {Object}
-     */
-    static getServerInfo(port) {
-        const status = this.getStatus(port);
-        const config = this.getConfig(port);
-
-        if (!status || !config) {
-            return null;
-        }
-
-        return {
-            port: port,
-            running: true,
-            uptime: status.uptime,
-            config: {
-                name: config.name || `Server ${port}`,
-                difficulty: config.difficulty || 'Unknown',
-                maxPlayers: config.maxPlayers || 0,
-                gameType: config.gameType || 'Unknown'
-            }
-        };
-    }
-
-    /**
-     * HELPER: Formatte une durée en millisecondes vers string lisible
-     * Exemple: 123456789ms → "1j 10h 17m"
-     * 
+     * Formate une durée en millisecondes
+     *
      * @private
      * @param {number} ms - Millisecondes
      * @returns {string}
@@ -408,8 +471,8 @@ class ArmaServerService {
     }
 
     /**
-     * HELPER: Exporte l'état des serveurs (pour debugging)
-     * 
+     * Exporte l'état des serveurs (debugging)
+     *
      * @returns {Object}
      */
     static exportState() {
