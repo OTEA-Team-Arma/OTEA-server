@@ -85,7 +85,12 @@ class ArmaServerService {
                     maxPlayers: config.maxPlayers || config.game?.maxPlayers || 16,
                     visible: true,
                     crossPlatform: false,
-                    mods: config.mods || config.game?.mods || []
+                    mods: (config.mods || config.game?.mods || []).map(mod => {
+                        if (typeof mod === 'object' && mod.modId) {
+                            return { modId: mod.modId.replace(/"/g, '').trim(), name: mod.name || mod.modId };
+                        }
+                        return { modId: mod.replace(/"/g, '').trim(), name: mod };
+                    })
                 }
             };
             await fs.writeFile(
