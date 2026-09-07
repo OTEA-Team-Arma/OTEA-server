@@ -64,9 +64,33 @@ class ArmaServerService {
                 '..',
                 `active_config_${port}.json`
             );
+            // Construire le config au format Arma Reforger
+            const armaConfig = {
+                dedicatedServerId: config.dedicatedServerId || 'otea_server',
+                region: config.region || 'EU',
+                bindAddress: '',
+                bindPort: config.port,
+                publicAddress: '',
+                publicPort: config.port,
+                a2s: {
+                    address: '127.0.0.1',
+                    port: 17777
+                },
+                game: {
+                    name: config.name || 'OTEA Server',
+                    password: config.password || '',
+                    passwordAdmin: config.passwordAdmin || '',
+                    admins: config.admins || [],
+                    scenarioId: config.scenarioId || config.game?.scenarioId || '',
+                    maxPlayers: config.maxPlayers || config.game?.maxPlayers || 16,
+                    visible: true,
+                    crossPlatform: false,
+                    mods: config.mods || config.game?.mods || []
+                }
+            };
             await fs.writeFile(
                 configPath,
-                JSON.stringify(config, null, 2)
+                JSON.stringify(armaConfig, null, 2)
             );
 
             // Récupérer l'exécutable et les args depuis osAbstraction (cross-platform)
