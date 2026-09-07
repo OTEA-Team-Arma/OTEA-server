@@ -342,11 +342,18 @@ function buildLaunchArgs(configPath, port) {
         throw new Error('osAbstraction not initialized. Call init() first.');
     }
 
+    // Créer le dossier de profil s'il n'existe pas
+    const profilePath = 'C:\\Arma3DS\\ServerProfile';
+    if (!fs.existsSync(profilePath)) {
+        fs.mkdirSync(profilePath, { recursive: true });
+    }
+
     const args = [
         '-config', configPath,
         '-port', String(port),
         '-update',
-        '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons'
+        '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons',
+        '-profile', profilePath
     ];
 
     // Ajouter -backendlog sur Linux
