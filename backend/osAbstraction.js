@@ -345,7 +345,8 @@ function buildLaunchArgs(configPath, port) {
     const args = [
         '-config', configPath,
         '-port', String(port),
-        '-update'
+        '-update',
+        '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons'
     ];
 
     // Ajouter -backendlog sur Linux

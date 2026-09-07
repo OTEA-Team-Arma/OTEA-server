@@ -109,7 +109,7 @@ class ArmaLogsService {
         const logEntry = {
             timestamp: new Date().toISOString(),
             line: line,
-            mod: mod,
+            mod: null,
             level: level
         };
 

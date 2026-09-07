@@ -44,7 +44,7 @@ class ArmaServerController {
             }
 
             // Vérifier port valide
-            if (port < 2301 || port > 65535) {
+            if (port < 1024 || port > 65535) {
                 await LogService.logAction('server-start-invalid', req.user?.name, {
                     ip: req.ip,
                     port: port,
