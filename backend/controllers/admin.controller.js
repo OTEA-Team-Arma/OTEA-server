@@ -277,8 +277,12 @@ class AdminController {
      */
     static async getArmaVersion(req, res) {
         try {
+            const osAbstraction = req.app.locals.osAbstraction;
+            const config = osAbstraction?.getConfig();
+            const armaPath = config?.serverRootPath;
+
             const ArmaVersionService = require('../services/arma-version.service');
-            const installed = await ArmaVersionService.getInstalledVersion();
+            const installed = await ArmaVersionService.getInstalledVersion(armaPath);
 
             return res.json(success(
                 {
