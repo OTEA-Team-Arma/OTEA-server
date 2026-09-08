@@ -1,0 +1,37 @@
+{
+  "dedicatedServerId": "",
+  "region": "EU",
+  "bindAddress": "",
+  "bindPort": 2001,
+  "publicAddress": "",
+  "publicPort": 2001,
+  "a2s": {
+    "address": "0.0.0.0",
+    "port": 2002
+  },
+  "game": {
+    "name": "",
+    "password": "",
+    "passwordAdmin": "",
+    "admins": [],
+    "scenarioId": "",
+    "maxPlayers": 16,
+    "visible": true,
+    "crossPlatform": false,
+    "mods": []
+  },
+  "gameProperties": {
+    "serverMaxViewDistance": 1600,
+    "serverMinGrassDistance": 0,
+    "networkViewDistance": 500,
+    "disableThirdPerson": false,
+    "fastValidation": true,
+    "battlEye": true
+  },
+  "rcon": {
+    "address": "0.0.0.0",
+    "port": 19999,
+    "password": "",
+    "maxClients": 16
+  }
+}

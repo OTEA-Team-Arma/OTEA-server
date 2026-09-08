@@ -378,6 +378,73 @@
                 </div>
             </div>
 
+            <!-- Section Propriétés avancées -->
+            <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">⚙️ Propriétés avancées</h4>
+
+                <div class="form-group">
+                    <label>Distance de vue serveur (serverMaxViewDistance)</label>
+                    <input type="number" id="config_gp_viewDistance" min="100" max="10000" value="1600" required>
+                    <small style="color:#888;font-size:11px;display:block;margin-top:3px;">Distance maximale de rendu (100-10000m)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Distance minimale de l'herbe (serverMinGrassDistance)</label>
+                    <input type="number" id="config_gp_grassDistance" min="0" max="1000" value="0" required>
+                    <small style="color:#888;font-size:11px;display:block;margin-top:3px;">Distance minimale de rendu de l'herbe (0-1000m)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Distance de vue réseau (networkViewDistance)</label>
+                    <input type="number" id="config_gp_networkDistance" min="100" max="5000" value="500" required>
+                    <small style="color:#888;font-size:11px;display:block;margin-top:3px;">Distance réseau pour synchronisation (100-5000m)</small>
+                </div>
+
+                <div style="display:flex;gap:20px;margin-top:15px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="config_gp_disableThirdPerson"
+                               style="width:auto;margin:0;cursor:pointer;">
+                        <label for="config_gp_disableThirdPerson" style="margin:0;cursor:pointer;color:#ddd;">
+                            Désactiver vue 3ème personne
+                        </label>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="config_gp_fastValidation" checked
+                               style="width:auto;margin:0;cursor:pointer;">
+                        <label for="config_gp_fastValidation" style="margin:0;cursor:pointer;color:#ddd;">
+                            Validation rapide
+                        </label>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="config_gp_battlEye" checked
+                               style="width:auto;margin:0;cursor:pointer;">
+                        <label for="config_gp_battlEye" style="margin:0;cursor:pointer;color:#ddd;">
+                            BattlEye activé
+                        </label>
+                    </div>
+                </div>
+
+                <hr style="margin:15px 0;border:0;border-top:1px solid #333;">
+                <h5 style="color:var(--accent);margin:10px 0;font-size:12px;">RCON</h5>
+
+                <div class="form-group">
+                    <label>Port RCON</label>
+                    <input type="number" id="config_rcon_port" min="1024" max="65535" value="19999" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mot de passe RCON</label>
+                    <input type="password" id="config_rcon_password" placeholder="Laisser vide pour désactiver">
+                </div>
+
+                <div class="form-group">
+                    <label>Clients RCON max</label>
+                    <input type="number" id="config_rcon_maxClients" min="1" max="64" value="16" required>
+                </div>
+            </div>
+
             <!-- Section Mods -->
             <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
                 <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">🔧 Mods</h4>

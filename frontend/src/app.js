@@ -1124,6 +1124,19 @@ function showCreateConfigForm() {
     document.getElementById('config_visible').checked = true;
     document.getElementById('config_crossPlatform').checked = false;
 
+    // Réinitialiser gameProperties
+    document.getElementById('config_gp_viewDistance').value = '1600';
+    document.getElementById('config_gp_grassDistance').value = '0';
+    document.getElementById('config_gp_networkDistance').value = '500';
+    document.getElementById('config_gp_disableThirdPerson').checked = false;
+    document.getElementById('config_gp_fastValidation').checked = true;
+    document.getElementById('config_gp_battlEye').checked = true;
+
+    // Réinitialiser rcon
+    document.getElementById('config_rcon_port').value = '19999';
+    document.getElementById('config_rcon_password').value = '';
+    document.getElementById('config_rcon_maxClients').value = '16';
+
     // Vider la liste des mods
     document.getElementById('configModsList').innerHTML = '';
 
@@ -1159,6 +1172,19 @@ async function editConfig(filename) {
         document.getElementById('config_visible').checked = config.game?.visible !== false;
         document.getElementById('config_crossPlatform').checked = config.game?.crossPlatform === true;
 
+        // Remplir gameProperties
+        document.getElementById('config_gp_viewDistance').value = config.gameProperties?.serverMaxViewDistance || 1600;
+        document.getElementById('config_gp_grassDistance').value = config.gameProperties?.serverMinGrassDistance || 0;
+        document.getElementById('config_gp_networkDistance').value = config.gameProperties?.networkViewDistance || 500;
+        document.getElementById('config_gp_disableThirdPerson').checked = config.gameProperties?.disableThirdPerson === true;
+        document.getElementById('config_gp_fastValidation').checked = config.gameProperties?.fastValidation !== false;
+        document.getElementById('config_gp_battlEye').checked = config.gameProperties?.battlEye !== false;
+
+        // Remplir rcon
+        document.getElementById('config_rcon_port').value = config.rcon?.port || 19999;
+        document.getElementById('config_rcon_password').value = config.rcon?.password || '';
+        document.getElementById('config_rcon_maxClients').value = config.rcon?.maxClients || 16;
+
         // Remplir la liste des mods
         fillConfigModsList(config.game?.mods || []);
 
@@ -1188,7 +1214,21 @@ async function saveConfig() {
             maxPlayers: parseInt(document.getElementById('config_maxPlayers').value),
             password: document.getElementById('config_password').value,
             admins: [], // TODO: ajouter gestion des admins
-            mods: getConfigModsFromForm()
+            mods: getConfigModsFromForm(),
+            gameProperties: {
+                serverMaxViewDistance: parseInt(document.getElementById('config_gp_viewDistance').value),
+                serverMinGrassDistance: parseInt(document.getElementById('config_gp_grassDistance').value),
+                networkViewDistance: parseInt(document.getElementById('config_gp_networkDistance').value),
+                disableThirdPerson: document.getElementById('config_gp_disableThirdPerson').checked,
+                fastValidation: document.getElementById('config_gp_fastValidation').checked,
+                battlEye: document.getElementById('config_gp_battlEye').checked
+            },
+            rcon: {
+                address: '0.0.0.0',
+                port: parseInt(document.getElementById('config_rcon_port').value),
+                password: document.getElementById('config_rcon_password').value,
+                maxClients: parseInt(document.getElementById('config_rcon_maxClients').value)
+            }
         };
 
         // Logger la valeur de scenarioId avant l'envoi
