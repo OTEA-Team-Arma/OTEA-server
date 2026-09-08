@@ -317,6 +317,72 @@ class ArmaServerController {
             );
         }
     }
+
+    /**
+     * POST /api/servers/start
+     * Lance un serveur depuis une config (architecture config directe)
+     *
+     * @param {Request} req - { body: { filename, port } }
+     * @param {Response} res
+     */
+    static async startServerFromConfig(req, res) {
+        try {
+            const { filename, port } = req.body;
+
+            // Validation
+            if (!filename || !port) {
+                await LogService.logAction('server-start-invalid', req.user?.name, {
+                    ip: req.ip,
+                    reason: 'Missing filename or port'
+                });
+                return res.status(400).json(
+                    validationError(['filename and port are required'])
+                );
+            }
+
+            // Vérifier port valide
+            if (port < 1024 || port > 65535) {
+                await LogService.logAction('server-start-invalid', req.user?.name, {
+                    ip: req.ip,
+                    port: port,
+                    reason: 'Invalid port range'
+                });
+                return res.status(400).json(
+                    validationError(['port must be between 1024 and 65535'])
+                );
+            }
+
+            // Vérifier pas déjà en cours
+            if (ArmaServerService.isRunning(port)) {
+                return res.status(409).json(
+                    error('Server already running on that port', 'SERVER_RUNNING')
+                );
+            }
+
+            // Lancer le serveur avec config directe
+            const result = await ArmaServerService.start(filename, port, {
+                osAbstraction: req.app.locals.osAbstraction
+            });
+
+            // Log action
+            await LogService.logAction('server-started', req.user?.name, {
+                ip: req.ip,
+                port: port,
+                configFile: filename,
+                pid: result.pid
+            });
+
+            return res.json(success(result, 'Server started successfully'));
+        } catch (err) {
+            await LogService.logAction('server-start-error', req.user?.name, {
+                ip: req.ip,
+                error: err.message
+            });
+            return res.status(500).json(
+                error('Failed to start server', 'START_ERROR', err.message)
+            );
+        }
+    }
 }
 
 module.exports = ArmaServerController;

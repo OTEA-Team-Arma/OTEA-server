@@ -62,6 +62,9 @@ class ArmaServerService {
      */
     static async saveConfig(data) {
         try {
+            // Logger la valeur de scenarioId reçue
+            console.log('[ArmaServerService.saveConfig] scenarioId reçu:', data.scenarioId);
+
             // Créer le dossier presets s'il n'existe pas
             if (!fsSync.existsSync(PRESETS_DIR)) {
                 await fs.mkdir(PRESETS_DIR, { recursive: true });
@@ -232,6 +235,11 @@ class ArmaServerService {
      * @returns {Promise<Object>} { success: true, port, pid, message }
      */
     static async start(filename, port, options = {}) {
+        // Logs explicites au début de la fonction
+        console.log('[ArmaServerService.start] ========================================');
+        console.log('[ArmaServerService.start] 📥 Filename reçu:', filename);
+        console.log('[ArmaServerService.start] 📥 Port reçu:', port);
+
         if (!filename || !port) {
             throw new Error('filename and port are required');
         }
@@ -254,6 +262,7 @@ class ArmaServerService {
             // Chemin absolu vers le fichier de config
             const configPath = path.join(PRESETS_DIR, filename);
 
+            console.log('[ArmaServerService.start] 📁 Chemin complet du fichier config:', configPath);
             console.log(`[ArmaServerService] 🚀 Starting server on port ${port} with config: ${configPath}`);
 
             // Récupérer l'exécutable et les args depuis osAbstraction

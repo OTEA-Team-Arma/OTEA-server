@@ -35,9 +35,15 @@ router.get('/info/:port', ArmaServerController.getServerInfo);
 
 /**
  * POST /api/servers
- * Lance un nouveau serveur
+ * Lance un nouveau serveur (ancienne méthode)
  */
 router.post('/', ArmaServerController.startServer);
+
+/**
+ * POST /api/servers/start
+ * Lance un serveur depuis une config (architecture config directe)
+ */
+router.post('/start', ArmaServerController.startServerFromConfig);
 
 /**
  * POST /api/servers/:port/restart

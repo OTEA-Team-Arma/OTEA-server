@@ -194,9 +194,12 @@ window.openTab = function (id) {
         }
     });
     if(id === 'dashboard') {loadPresets();}
+    if(id === 'configuration') {loadConfigsList();}
     if(id === 'adminlog') {loadAdminLog();}
     if(id === 'armaServer') {loadArmaServerInfo();}
     if(id === 'logs') {loadServersStatus();}
+    if(id === 'reference') {loadMissionsRefList(); loadModsRefList();}
+    if(id === 'administration') {loadSystemPaths();}
 };
 
 // --- FONCTIONS UTILITAIRES ---
@@ -1057,4 +1060,755 @@ window.triggerArmaUpdate = function triggerArmaUpdate() {
             alert(`Erreur lors du lancement de la mise à jour: ${err.message}`);
         });
     }
-};
+};// ============================================================================
+// GESTION DES CONFIGURATIONS SERVEUR (Architecture Config Directe)
+// ============================================================================
+
+// État global de l'éditeur de config
+let currentConfigEditing = null;
+let configFormMode = 'create'; // 'create' ou 'edit'
+
+// Liste des missions vanilla Arma Reforger
+const VANILLA_MISSIONS = [
+    { name: 'GM Eden', scenarioId: '{59AD59368755F41A}Missions/21_GM_Eden.conf' },
+    { name: 'GM Arland', scenarioId: '{2BBBE828037C6F4B}Missions/22_GM_Arland.conf' },
+    { name: 'GM Cain', scenarioId: '{F45C6C15D31252E6}Missions/27_GM_Cain.conf' },
+    { name: 'CombatOps', scenarioId: '{DAA03C6E6099D50F}Missions/24_CombatOps.conf' },
+    { name: 'CombatOps Everon', scenarioId: '{DFAC5FABD11F2390}Missions/26_CombatOpsEveron.conf' },
+    { name: 'Conflict East', scenarioId: '{8C8EDD6FAE093FFF}Missions/Conflict_East.conf' },
+    { name: 'Conflict West', scenarioId: '{23FD7E11B1EEED40}Missions/Conflict_West.conf' },
+    { name: 'Campaign Arland', scenarioId: '{C41618FD18E9D714}Missions/23_Campaign_Arland.conf' },
+    { name: 'Campaign Cain', scenarioId: '{9C6054B42A044DEC}Missions/23_Campaign_Cain.conf' },
+    { name: 'Campaign Everon', scenarioId: '{0220741028718E7F}Missions/23_Campaign_HQC_Everon.conf' }
+];
+
+// Liste des mods de référence
+const REFERENCE_MODS = [
+    { name: 'GameMasterEnhanced', modId: '5964E0B3BB7410CE' },
+    { name: 'GameMasterFX', modId: '5994AD5A9F33BE57' },
+    { name: 'RHS ContentPack01', modId: '1337C0DE5DABBEEF' },
+    { name: 'RHS ContentPack02', modId: 'BADC0DEDABBEDA5E' },
+    { name: 'RHS StatusQuo', modId: '595F2BF2F44836FB' },
+    { name: 'Zimnitrita', modId: '597697D81A1EA202' },
+    { name: 'ZimnitritaArmedForces', modId: '61073D5134A9ACC2' },
+    { name: 'ACE Core', modId: '60C4CE4888FF4621' },
+    { name: 'MapGeneratorPro', modId: '6A3B0A83308240C2' }
+];
+
+/**
+ * Charge et affiche la liste des configurations
+ */
+async function loadConfigsList() {
+    try {
+        const response = await apiRequest('/configs', 'GET');
+        console.log('[loadConfigsList] API Response:', response);
+        console.log('[loadConfigsList] Réponse complète GET /api/configs:', JSON.stringify(response, null, 2));
+
+        if (!response || !response.data) {
+            console.error('[loadConfigsList] Invalid response:', response);
+            showNotification('Erreur lors du chargement des configs', 'error');
+            return;
+        }
+
+        const configs = response.data;
+        console.log('[loadConfigsList] Configs loaded:', configs.length);
+        const listContainer = document.getElementById('configsList');
+
+        if (!listContainer) return;
+
+        if (configs.length === 0) {
+            listContainer.innerHTML = `
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:20px;color:#888;">
+                        Aucune configuration disponible. Créez-en une !
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        listContainer.innerHTML = configs.map(config => `
+            <tr>
+                <td style="padding:12px;">${config.name || 'Sans nom'}</td>
+                <td style="padding:12px;">${config.port || '-'}</td>
+                <td style="padding:12px;">${config.scenarioId ? config.scenarioId.split('/').pop() : '-'}</td>
+                <td style="padding:12px;">${config.maxPlayers || 0}</td>
+                <td style="padding:12px;">${config.mods === 0 ? '-' : config.mods}</td>
+                <td style="padding:12px;">
+                    <button class="btn btn-start" onclick="startServerFromConfig('${config.filename}', ${config.port})">Lancer</button>
+                    <button class="btn btn-edit" onclick="editConfig('${config.filename}')">Modifier</button>
+                    <button class="btn btn-delete" onclick="deleteConfig('${config.filename}')">Supprimer</button>
+                </td>
+            </tr>
+        `).join('');
+
+    } catch (error) {
+        console.error('loadConfigsList error:', error);
+        showNotification('Erreur lors du chargement des configs', 'error');
+    }
+}
+
+/**
+ * Affiche le formulaire de création de config
+ */
+function showCreateConfigForm() {
+    configFormMode = 'create';
+    currentConfigEditing = null;
+
+    // Réinitialiser le formulaire
+    document.getElementById('config_name').value = '';
+    document.getElementById('config_port').value = '2001';
+    document.getElementById('config_serverName').value = '';
+    document.getElementById('config_password').value = '';
+    document.getElementById('config_scenarioId').value = '';
+    document.getElementById('config_maxPlayers').value = '16';
+    document.getElementById('config_visible').checked = true;
+    document.getElementById('config_crossPlatform').checked = false;
+
+    // Vider la liste des mods
+    document.getElementById('configModsList').innerHTML = '';
+
+    // Afficher le formulaire
+    document.getElementById('configFormContainer').style.display = 'block';
+    document.getElementById('configFormTitle').textContent = 'Créer une nouvelle configuration';
+    document.getElementById('configSaveBtn').textContent = 'Créer la configuration';
+}
+
+/**
+ * Charge une config pour édition
+ */
+async function editConfig(filename) {
+    try {
+        const response = await apiRequest(`/configs/${filename}`, 'GET');
+
+        if (!response || !response.data) {
+            showNotification('Erreur lors du chargement de la config', 'error');
+            return;
+        }
+
+        const config = response.data;
+        configFormMode = 'edit';
+        currentConfigEditing = filename;
+
+        // Remplir le formulaire
+        document.getElementById('config_name').value = config.game?.name || '';
+        document.getElementById('config_port').value = config.bindPort || 2001;
+        document.getElementById('config_serverName').value = config.game?.name || '';
+        document.getElementById('config_password').value = config.game?.password || '';
+        document.getElementById('config_scenarioId').value = config.game?.scenarioId || '';
+        document.getElementById('config_maxPlayers').value = config.game?.maxPlayers || 16;
+        document.getElementById('config_visible').checked = config.game?.visible !== false;
+        document.getElementById('config_crossPlatform').checked = config.game?.crossPlatform === true;
+
+        // Remplir la liste des mods
+        fillConfigModsList(config.game?.mods || []);
+
+        // Afficher le formulaire
+        document.getElementById('configFormContainer').style.display = 'block';
+        document.getElementById('configFormTitle').textContent = `Modifier: ${config.game?.name || filename}`;
+        document.getElementById('configSaveBtn').textContent = 'Enregistrer les modifications';
+
+    } catch (error) {
+        console.error('editConfig error:', error);
+        showNotification('Erreur lors du chargement de la config', 'error');
+    }
+}
+
+/**
+ * Sauvegarde une configuration (create ou update)
+ */
+async function saveConfig() {
+    try {
+        // Récupérer les données du formulaire
+        const scenarioId = document.getElementById('config_scenarioId').value.trim();
+
+        const configData = {
+            name: document.getElementById('config_name').value.trim(),
+            port: parseInt(document.getElementById('config_port').value),
+            scenarioId: scenarioId,
+            maxPlayers: parseInt(document.getElementById('config_maxPlayers').value),
+            password: document.getElementById('config_password').value,
+            admins: [], // TODO: ajouter gestion des admins
+            mods: getConfigModsFromForm()
+        };
+
+        // Logger la valeur de scenarioId avant l'envoi
+        console.log('[saveConfig] scenarioId à envoyer:', scenarioId);
+
+        // Validation
+        if (!configData.name) {
+            showNotification('Le nom du serveur est requis', 'error');
+            return;
+        }
+
+        if (!configData.port || configData.port < 1024) {
+            showNotification('Le port doit être supérieur ou égal à 1024', 'error');
+            return;
+        }
+
+        if (!configData.scenarioId) {
+            showNotification('Le scénario est requis', 'error');
+            return;
+        }
+
+        // Enregistrer
+        let endpoint = '/configs';
+        let method = 'POST';
+
+        if (configFormMode === 'edit' && currentConfigEditing) {
+            endpoint = `/configs/${currentConfigEditing}`;
+            method = 'PUT';
+        }
+
+        console.log('[saveConfig] Sending:', { endpoint, method, configData });
+        const response = await apiRequest(endpoint, method, configData);
+        console.log('[saveConfig] API Response:', response);
+
+        if (response && response.success) {
+            showNotification(
+                configFormMode === 'create' ? 'Configuration créée avec succès' : 'Configuration mise à jour',
+                'success'
+            );
+
+            // Masquer le formulaire et recharger la liste
+            cancelConfigForm();
+            loadConfigsList();
+        } else {
+            console.error('[saveConfig] Error:', response);
+            showNotification(response?.message || 'Erreur lors de l\'enregistrement', 'error');
+        }
+
+    } catch (error) {
+        console.error('saveConfig error:', error);
+        showNotification('Erreur lors de l\'enregistrement de la config', 'error');
+    }
+}
+
+/**
+ * Supprime une configuration
+ */
+async function deleteConfig(filename) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer la configuration "${filename}" ?`)) {
+        return;
+    }
+
+    try {
+        console.log('[deleteConfig] Deleting:', filename);
+        const response = await apiRequest(`/configs/${filename}`, 'DELETE');
+        console.log('[deleteConfig] API Response:', response);
+
+        if (response && response.success) {
+            showNotification('Configuration supprimée', 'success');
+            loadConfigsList();
+        } else {
+            console.error('[deleteConfig] Error:', response);
+            showNotification(response?.message || 'Erreur lors de la suppression', 'error');
+        }
+
+    } catch (error) {
+        console.error('[deleteConfig] Exception:', error);
+        showNotification('Erreur lors de la suppression de la config', 'error');
+    }
+}
+
+/**
+ * Lance un serveur depuis une config
+ */
+async function startServerFromConfig(filename, port) {
+    try {
+        const response = await apiRequest('/servers/start', 'POST', { filename, port });
+
+        if (response && response.success) {
+            showNotification(`Serveur lancé sur le port ${port}`, 'success');
+            // Recharger l'état des serveurs
+            if (typeof loadServersStatus === 'function') {
+                setTimeout(loadServersStatus, 1000);
+            }
+        } else {
+            showNotification(response?.message || 'Erreur lors du lancement', 'error');
+        }
+
+    } catch (error) {
+        console.error('startServerFromConfig error:', error);
+        showNotification('Erreur lors du lancement du serveur', 'error');
+    }
+}
+
+/**
+ * Arrête un serveur
+ */
+async function stopServerByPort(port) {
+    if (!confirm(`Arrêter le serveur sur le port ${port} ?`)) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/servers/stop', 'POST', { port });
+
+        if (response && response.success) {
+            showNotification(`Serveur arrêté (port ${port})`, 'success');
+            if (typeof loadServersStatus === 'function') {
+                setTimeout(loadServersStatus, 1000);
+            }
+        } else {
+            showNotification(response?.message || 'Erreur lors de l\'arrêt', 'error');
+        }
+
+    } catch (error) {
+        console.error('stopServerByPort error:', error);
+        showNotification('Erreur lors de l\'arrêt du serveur', 'error');
+    }
+}
+
+/**
+ * Annule le formulaire de config
+ */
+function cancelConfigForm() {
+    document.getElementById('configFormContainer').style.display = 'none';
+    currentConfigEditing = null;
+    configFormMode = 'create';
+}
+
+/**
+ * Ajoute un mod au formulaire
+ */
+function addConfigMod() {
+    const list = document.getElementById('configModsList');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td style="padding:8px;">
+            <input type="text" class="config-mod-id" placeholder="ModID (ex: 5964E0B3BB7410CE)"
+                   style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+        </td>
+        <td style="padding:8px;">
+            <input type="text" class="config-mod-name" placeholder="Nom du mod"
+                   style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+        </td>
+        <td style="padding:8px;text-align:center;">
+            <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
+        </td>
+    `;
+    list.appendChild(row);
+}
+
+/**
+ * Remplit la liste des mods depuis un tableau
+ */
+function fillConfigModsList(mods) {
+    const list = document.getElementById('configModsList');
+    list.innerHTML = '';
+
+    if (mods && Array.isArray(mods)) {
+        mods.forEach(mod => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td style="padding:8px;">
+                    <input type="text" class="config-mod-id" value="${mod.modId || ''}" placeholder="ModID"
+                           style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                </td>
+                <td style="padding:8px;">
+                    <input type="text" class="config-mod-name" value="${mod.name || ''}" placeholder="Nom"
+                           style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                </td>
+                <td style="padding:8px;text-align:center;">
+                    <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
+                </td>
+            `;
+            list.appendChild(row);
+        });
+    }
+}
+
+/**
+ * Récupère les mods depuis le formulaire
+ */
+function getConfigModsFromForm() {
+    const rows = document.querySelectorAll('#configModsList tr');
+    const mods = [];
+
+    rows.forEach(row => {
+        const modId = row.querySelector('.config-mod-id')?.value.trim();
+        const modName = row.querySelector('.config-mod-name')?.value.trim();
+
+        if (modId) {
+            mods.push({
+                modId: modId,
+                name: modName || modId
+            });
+        }
+    });
+
+    return mods;
+}
+
+// ============================================================================
+// MODALES: MISSIONS ET MODS DE RÉFÉRENCE
+// ============================================================================
+
+/**
+ * Ouvre la modale des missions vanilla et remplit la liste
+ */
+function openMissionsModal() {
+    const modal = document.getElementById('missionsModal');
+    const list = document.getElementById('missionsList');
+
+    // Vider et remplir la liste depuis localStorage
+    list.innerHTML = '';
+    const missions = loadMissionsFromStorage();
+    missions.forEach(mission => {
+        const button = document.createElement('button');
+        button.className = 'btn btn-edit';
+        button.style.cssText = 'width:100%;text-align:left;padding:12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+        button.innerHTML = `
+            <span style="font-weight:bold;color:#ffffff;">${mission.name}</span>
+            <span style="color:#ffffff;font-size:11px;font-family:monospace;">${mission.scenarioId}</span>
+        `;
+        button.onclick = () => selectMission(mission.scenarioId);
+        list.appendChild(button);
+    });
+
+    // Afficher la modale
+    modal.style.display = 'flex';
+}
+
+/**
+ * Ferme la modale des missions
+ */
+function closeMissionsModal() {
+    document.getElementById('missionsModal').style.display = 'none';
+}
+
+/**
+ * Sélectionne une mission et remplit le champ scenarioId
+ */
+function selectMission(scenarioId) {
+    document.getElementById('config_scenarioId').value = scenarioId;
+    closeMissionsModal();
+    showNotification('Mission sélectionnée', 'success');
+}
+
+/**
+ * Ouvre la modale des mods de référence et remplit la liste
+ */
+function openModsModal() {
+    const modal = document.getElementById('modsModal');
+    const list = document.getElementById('modsList');
+
+    // Vider et remplir la liste depuis localStorage
+    list.innerHTML = '';
+    const mods = loadModsFromStorage();
+    mods.forEach(mod => {
+        const button = document.createElement('button');
+        button.className = 'btn btn-start';
+        button.style.cssText = 'width:100%;text-align:left;padding:12px;font-size:13px;display:flex;justify-content:space-between;align-items:center;';
+        button.innerHTML = `
+            <span style="font-weight:bold;">${mod.name}</span>
+            <span style="color:#ddd;font-size:11px;font-family:monospace;">${mod.modId}</span>
+        `;
+        button.onclick = () => addReferenceMod(mod.modId, mod.name);
+        list.appendChild(button);
+    });
+
+    // Afficher la modale
+    modal.style.display = 'flex';
+}
+
+/**
+ * Ferme la modale des mods
+ */
+function closeModsModal() {
+    document.getElementById('modsModal').style.display = 'none';
+}
+
+/**
+ * Ajoute un mod de référence à la liste des mods du formulaire
+ */
+function addReferenceMod(modId, modName) {
+    // Vérifier si le mod n'est pas déjà présent
+    const existingRows = document.querySelectorAll('#configModsList tr');
+    let alreadyExists = false;
+
+    existingRows.forEach(row => {
+        const existingModId = row.querySelector('.config-mod-id')?.value.trim();
+        if (existingModId === modId) {
+            alreadyExists = true;
+        }
+    });
+
+    if (alreadyExists) {
+        showNotification('Ce mod est déjà dans la liste', 'warning');
+        return;
+    }
+
+    // Ajouter le mod à la liste
+    const list = document.getElementById('configModsList');
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td style="padding:8px;">
+            <input type="text" class="config-mod-id" value="${modId}" placeholder="ModID"
+                   style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+        </td>
+        <td style="padding:8px;">
+            <input type="text" class="config-mod-name" value="${modName}" placeholder="Nom"
+                   style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+        </td>
+        <td style="padding:8px;text-align:center;">
+            <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
+        </td>
+    `;
+    list.appendChild(row);
+
+    showNotification(`Mod "${modName}" ajouté`, 'success');
+}
+
+// ============================================================================
+// GESTION RÉFÉRENCE: MISSIONS ET MODS (localStorage)
+// ============================================================================
+
+/**
+ * Charge les missions depuis localStorage ou initialise avec les valeurs par défaut
+ */
+function loadMissionsFromStorage() {
+    const stored = localStorage.getItem('otea_missions_ref');
+    if (stored) {
+        return JSON.parse(stored);
+    }
+    // Initialiser avec les missions vanilla par défaut
+    return VANILLA_MISSIONS;
+}
+
+/**
+ * Sauvegarde les missions dans localStorage
+ */
+function saveMissionsToStorage(missions) {
+    localStorage.setItem('otea_missions_ref', JSON.stringify(missions));
+}
+
+/**
+ * Charge les mods depuis localStorage ou initialise avec les valeurs par défaut
+ */
+function loadModsFromStorage() {
+    const stored = localStorage.getItem('otea_mods_ref');
+    if (stored) {
+        return JSON.parse(stored);
+    }
+    // Initialiser avec les mods de référence par défaut
+    return REFERENCE_MODS;
+}
+
+/**
+ * Sauvegarde les mods dans localStorage
+ */
+function saveModsToStorage(mods) {
+    localStorage.setItem('otea_mods_ref', JSON.stringify(mods));
+}
+
+/**
+ * Affiche la liste des missions de référence
+ */
+function loadMissionsRefList() {
+    const missions = loadMissionsFromStorage();
+    const tbody = document.getElementById('missionsRefList');
+
+    if (!tbody) return;
+
+    if (missions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Aucune mission enregistrée</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = missions.map((mission, index) => `
+        <tr>
+            <td style="padding:12px;">${mission.name}</td>
+            <td style="padding:12px;font-family:monospace;font-size:12px;">${mission.scenarioId}</td>
+            <td style="padding:12px;text-align:center;">
+                <button class="btn btn-delete" onclick="deleteMission(${index})" style="font-size:11px;padding:4px 8px;">Supprimer</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Ajoute une mission
+ */
+function addMission() {
+    const nameInput = document.getElementById('new_mission_name');
+    const idInput = document.getElementById('new_mission_id');
+
+    const name = nameInput.value.trim();
+    const scenarioId = idInput.value.trim();
+
+    if (!name || !scenarioId) {
+        showNotification('Veuillez remplir tous les champs', 'warning');
+        return;
+    }
+
+    const missions = loadMissionsFromStorage();
+    missions.push({ name, scenarioId });
+    saveMissionsToStorage(missions);
+
+    nameInput.value = '';
+    idInput.value = '';
+
+    loadMissionsRefList();
+    showNotification('Mission ajoutée', 'success');
+}
+
+/**
+ * Supprime une mission
+ */
+function deleteMission(index) {
+    if (!confirm('Supprimer cette mission ?')) return;
+
+    const missions = loadMissionsFromStorage();
+    missions.splice(index, 1);
+    saveMissionsToStorage(missions);
+
+    loadMissionsRefList();
+    showNotification('Mission supprimée', 'success');
+}
+
+/**
+ * Affiche la liste des mods de référence
+ */
+function loadModsRefList() {
+    const mods = loadModsFromStorage();
+    const tbody = document.getElementById('modsRefList');
+
+    if (!tbody) return;
+
+    if (mods.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Aucun mod enregistré</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = mods.map((mod, index) => `
+        <tr>
+            <td style="padding:12px;">${mod.name}</td>
+            <td style="padding:12px;font-family:monospace;font-size:12px;">${mod.modId}</td>
+            <td style="padding:12px;text-align:center;">
+                <button class="btn btn-delete" onclick="deleteMod(${index})" style="font-size:11px;padding:4px 8px;">Supprimer</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Ajoute un mod
+ */
+function addMod() {
+    const nameInput = document.getElementById('new_mod_name');
+    const idInput = document.getElementById('new_mod_id');
+
+    const name = nameInput.value.trim();
+    const modId = idInput.value.trim();
+
+    if (!name || !modId) {
+        showNotification('Veuillez remplir tous les champs', 'warning');
+        return;
+    }
+
+    const mods = loadModsFromStorage();
+    mods.push({ name, modId });
+    saveModsToStorage(mods);
+
+    nameInput.value = '';
+    idInput.value = '';
+
+    loadModsRefList();
+    showNotification('Mod ajouté', 'success');
+}
+
+/**
+ * Supprime un mod
+ */
+function deleteMod(index) {
+    if (!confirm('Supprimer ce mod ?')) return;
+
+    const mods = loadModsFromStorage();
+    mods.splice(index, 1);
+    saveModsToStorage(mods);
+
+    loadModsRefList();
+    showNotification('Mod supprimé', 'success');
+}
+
+// ============================================================================
+// GESTION SYSTÈME: CHEMINS
+// ============================================================================
+
+/**
+ * Charge les chemins système depuis le backend
+ */
+async function loadSystemPaths() {
+    try {
+        const response = await apiRequest('/system/paths', 'GET');
+        console.log('[loadSystemPaths] API Response:', response);
+
+        if (!response) {
+            console.error('[loadSystemPaths] Invalid response:', response);
+            return;
+        }
+
+        // Remplir les champs depuis le nouveau format de réponse
+        document.getElementById('system_serverPath').value = response.serverExecutable?.path || '';
+        document.getElementById('system_addonsDir').value = response.addonsDir?.path || '';
+        document.getElementById('system_profilePath').value = response.serverProfile?.path || '';
+        document.getElementById('system_steamCmdPath').value = response.steamCmd?.path || '';
+
+        // Mettre à jour les indicateurs
+        document.getElementById('status_serverPath').textContent = response.serverExecutable?.exists ? '✅' : '❌';
+        document.getElementById('status_addonsDir').textContent = response.addonsDir?.exists ? '✅' : '❌';
+        document.getElementById('status_profilePath').textContent = response.serverProfile?.exists ? '✅' : '❌';
+        document.getElementById('status_steamCmdPath').textContent = response.steamCmd?.exists ? '✅' : '❌';
+
+    } catch (error) {
+        console.error('[loadSystemPaths] Error:', error);
+        showNotification('Erreur lors du chargement des chemins système', 'error');
+    }
+}
+
+/**
+ * Sauvegarde les chemins système
+ */
+async function saveSystemPaths() {
+    try {
+        const data = {
+            serverPath: document.getElementById('system_serverPath').value.trim(),
+            addonsDir: document.getElementById('system_addonsDir').value.trim(),
+            profilePath: document.getElementById('system_profilePath').value.trim(),
+            steamCmdPath: document.getElementById('system_steamCmdPath').value.trim()
+        };
+
+        console.log('[saveSystemPaths] Sending:', data);
+
+        const response = await apiRequest('/system/paths', 'PUT', data);
+        console.log('[saveSystemPaths] API Response:', response);
+
+        if (response && response.success) {
+            showNotification('Chemins système sauvegardés', 'success');
+            // Recharger pour mettre à jour les indicateurs
+            loadSystemPaths();
+        } else {
+            showNotification(response?.message || 'Erreur lors de la sauvegarde', 'error');
+        }
+
+    } catch (error) {
+        console.error('[saveSystemPaths] Error:', error);
+        showNotification('Erreur lors de la sauvegarde des chemins', 'error');
+    }
+}
+
+
+// Initialisation au chargement de la page
+window.addEventListener('load', () => {
+    // Charger la liste des configs au démarrage si l'onglet est actif
+    if (document.getElementById('configuration')?.classList.contains('active')) {
+        loadConfigsList();
+    }
+    // Charger les listes de référence si l'onglet Référence est actif
+    if (document.getElementById('reference')?.classList.contains('active')) {
+        loadMissionsRefList();
+        loadModsRefList();
+    }
+});

@@ -87,6 +87,7 @@
     <button id="adminUserTab" style="display:none" onclick="openTab('users')">Utilisateurs</button>
     <button onclick="openTab('administration')">Administration</button>
     <button onclick="openTab('playerManagement')">Joueurs</button>
+    <button onclick="openTab('reference')">Référence</button>
 </nav>
 
 <div class="container">
@@ -95,9 +96,63 @@
 
     <div id="administration" class="tab-content">
         <h2 style="margin-bottom:30px;">Administration</h2>
-        
+
         <!-- Notifications -->
         <div id="notificationContainer" style="position:fixed;top:20px;right:20px;z-index:1000;"></div>
+
+        <!-- SECTION SYSTÈME -->
+        <div style="margin-bottom:30px;">
+            <h3 style="color:#f39c12;margin-bottom:15px;font-size:16px;">⚙️ Système</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+
+                <!-- Chemin ArmaReforgerServer.exe -->
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="color:var(--accent);font-size:12px;display:block;margin-bottom:5px;">Chemin ArmaReforgerServer.exe</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="system_serverPath" placeholder="C:\ArmaReforgerServer\ArmaReforgerServer.exe"
+                               style="flex:1;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;font-size:12px;">
+                        <span id="status_serverPath" style="font-size:18px;min-width:24px;text-align:center;">⏳</span>
+                    </div>
+                </div>
+
+                <!-- Chemin addonsDir -->
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="color:var(--accent);font-size:12px;display:block;margin-bottom:5px;">Chemin addonsDir (jeu client Arma)</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="system_addonsDir" placeholder="I:\SteamLibrary\steamapps\common\Arma Reforger\addons"
+                               style="flex:1;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;font-size:12px;">
+                        <span id="status_addonsDir" style="font-size:18px;min-width:24px;text-align:center;">⏳</span>
+                    </div>
+                </div>
+
+                <!-- Chemin profil serveur dédié -->
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="color:var(--accent);font-size:12px;display:block;margin-bottom:5px;">Chemin profil serveur dédié</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="system_profilePath" placeholder="C:\Arma3DS\ServerProfile"
+                               style="flex:1;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;font-size:12px;">
+                        <span id="status_profilePath" style="font-size:18px;min-width:24px;text-align:center;">⏳</span>
+                    </div>
+                </div>
+
+                <!-- Chemin SteamCMD -->
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="color:var(--accent);font-size:12px;display:block;margin-bottom:5px;">Chemin SteamCMD</label>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <input type="text" id="system_steamCmdPath" placeholder="C:\SteamCMD\steamcmd.exe"
+                               style="flex:1;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;font-size:12px;">
+                        <span id="status_steamCmdPath" style="font-size:18px;min-width:24px;text-align:center;">⏳</span>
+                    </div>
+                </div>
+
+                <!-- Bouton Sauvegarder -->
+                <button class="btn btn-start" onclick="saveSystemPaths()" style="margin-top:10px;">💾 Sauvegarder les chemins</button>
+                <div id="systemPathsMsg" style="margin-top:10px;font-size:12px;"></div>
+            </div>
+        </div>
+
+        <!-- Séparateur -->
+        <hr style="border:none;border-top:1px solid #333;margin:30px 0;">
 
         <!-- Layout 2 colonnes -->
         <div style="display:flex;gap:10px;margin-top:20px;width:calc(100% - 10px);margin-left:5px;margin-right:5px;">
@@ -217,78 +272,159 @@
         </div>
 
     </div>
-    <div id="configuration" class="tab-content">
-        <h2 style="margin-bottom:30px;">Configuration Serveur</h2>
-        
-        <!-- LISTE DES PRESETS EXISTANTS -->
-        <div style="margin-bottom:40px;">
-            <h3 style="color:var(--accent);margin-bottom:15px;">📋 Presets existants</h3>
-            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
-                <table style="width:100%;margin-bottom:0;">
-                    <tbody>
-                        <tr style="background:#252525;color:var(--accent);">
-                            <th style="width:30%;padding:12px;text-align:left;border-bottom:1px solid #333;">Nom du preset</th>
-                            <th style="width:15%;padding:12px;text-align:left;border-bottom:1px solid #333;">Port</th>
-                            <th style="width:25%;padding:12px;text-align:left;border-bottom:1px solid #333;">Scenario</th>
-                            <th style="width:30%;padding:12px;text-align:left;border-bottom:1px solid #333;">Actions</th>
-                        </tr>
-                    </tbody>
-                    <tbody id="presetList"></tbody>
-                </table>
-                <div style="color:#888;text-align:center;padding:18px 0 0 0;font-size:12px;">
-                    Sélectionnez un preset pour le modifier ou le supprimer.
+<!-- SECTION CONFIGURATION SERVEUR -->
+<div id="configuration" class="tab-content">
+    <h2 style="margin-bottom:20px;">Configuration Serveur</h2>
+
+    <!-- Bouton créer nouvelle config -->
+    <div style="margin-bottom:20px;">
+        <button class="btn btn-start" onclick="showCreateConfigForm()" style="font-size:14px;padding:10px 20px;">
+            ➕ Nouvelle Configuration
+        </button>
+        <button class="btn btn-edit" onclick="loadConfigsList()" style="font-size:14px;padding:10px 20px;">
+            🔄 Actualiser
+        </button>
+    </div>
+
+    <!-- Liste des configurations -->
+    <div style="background:var(--card);border-radius:10px;padding:20px;margin-bottom:20px;">
+        <h3 style="color:var(--accent);margin-bottom:15px;">📋 Configurations Disponibles</h3>
+        <table style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr style="background:#252525;">
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Nom</th>
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Port</th>
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Scénario</th>
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Joueurs</th>
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Mods</th>
+                    <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="configsList">
+                <tr>
+                    <td colspan="6" style="text-align:center;padding:20px;color:#888;">
+                        Chargement...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Formulaire Create/Edit (masqué par défaut) -->
+    <div id="configFormContainer" style="display:none;background:var(--card);border-radius:10px;padding:20px;">
+        <h3 id="configFormTitle" style="color:var(--accent);margin-bottom:20px;">Créer une nouvelle configuration</h3>
+
+        <form onsubmit="event.preventDefault(); saveConfig();">
+            <!-- Section Identification -->
+            <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">🏷️ Identification</h4>
+
+                <div class="form-group">
+                    <label>Nom de la configuration *</label>
+                    <input type="text" id="config_name" placeholder="Ex: Mon Serveur Game Master" required>
+                    <small style="color:#888;font-size:11px;">Génère automatiquement le nom de fichier ServerConfig_xxx.json</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Port du serveur * (min: 1024)</label>
+                    <input type="number" id="config_port" min="1024" max="65535" value="2001" required>
                 </div>
             </div>
-        </div>
-        
-        <!-- FORMULAIRE DE CRÉATION/ÉDITION -->
-        <h3 style="color:var(--accent);margin-bottom:15px;">⚙️ Créer ou modifier un preset</h3>
-        <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
-            <div class="form-group">
-                <label>Titre du Preset (Pour vous)</label>
-                <input type="text" id="preset_title" placeholder="Ex: Serveur Samedi Soir">
+
+            <!-- Section Serveur -->
+            <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">🎮 Paramètres du serveur</h4>
+
+                <div class="form-group">
+                    <label>Nom du serveur (affiché dans le navigateur) *</label>
+                    <input type="text" id="config_serverName" placeholder="[FR] Mon Serveur Arma Reforger" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Mot de passe (optionnel)</label>
+                    <input type="password" id="config_password" placeholder="Laisser vide pour serveur public">
+                </div>
+
+                <div class="form-group">
+                    <label>Scénario / Mission *</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" id="config_scenarioId" placeholder="{GUID}Missions/nom.conf" required style="flex:1;">
+                        <button type="button" class="btn btn-edit" onclick="openMissionsModal()" style="padding:10px 15px;">📋 Missions</button>
+                    </div>
+                    <small style="color:#888;font-size:11px;">Exemple : {59AD59368755F41A}Missions/21_GM_Eden.conf</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Nombre maximum de joueurs</label>
+                    <input type="number" id="config_maxPlayers" min="1" max="64" value="16" required>
+                </div>
+
+                <div style="display:flex;gap:20px;margin-top:15px;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="config_visible" checked
+                               style="width:auto;margin:0;cursor:pointer;">
+                        <label for="config_visible" style="margin:0;cursor:pointer;color:#ddd;">
+                            Visible dans le navigateur de serveurs
+                        </label>
+                    </div>
+
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="config_crossPlatform"
+                               style="width:auto;margin:0;cursor:pointer;">
+                        <label for="config_crossPlatform" style="margin:0;cursor:pointer;color:#ddd;">
+                            Cross-platform (PC + Console)
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Nom du Serveur (Public)</label>
-                <input type="text" id="srv_name">
-            </div>
-            <div class="form-group">
-                <label>Port du serveur</label>
-                <input type="number" id="srv_port" value="2001">
-            </div>
-            <div class="form-group">
-                <label>Nombre de joueurs</label>
-                <input type="number" id="srv_players" value="32">
-            </div>
-            <hr style="margin:30px 0 20px 0;border:0;border-top:1px solid #444;">
-            <h4 style="color:var(--accent);margin-bottom:15px;">🎮 Mods et Missions</h4>
-            <div class="form-group">
-                <label>ID du Scénario (GUID)</label>
-                <input type="text" id="mission_id" placeholder="{GUID}Missions/MaMission.conf">
-            </div>
-            <div class="form-group">
-                <label>Nom de la Mission</label>
-                <input type="text" id="mission_name" placeholder="Ex: Campaign 23">
-            </div>
-            <div class="form-group">
-                <label>Mods du serveur</label>
-                <table style="width:100%;border-collapse:collapse;background:var(--card);margin-bottom:10px;">
+
+            <!-- Section Mods -->
+            <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">🔧 Mods</h4>
+
+                <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <button type="button" class="btn btn-start" onclick="addConfigMod()"
+                            style="font-size:12px;padding:8px 15px;">
+                        ➕ Ajouter un mod
+                    </button>
+                    <button type="button" class="btn btn-edit" onclick="openModsModal()"
+                            style="font-size:12px;padding:8px 15px;">
+                        🎮 Mods
+                    </button>
+                </div>
+
+                <table style="width:100%;border-collapse:collapse;background:#121212;border-radius:4px;">
                     <thead>
-                        <tr style="background:#252525;color:var(--accent);">
-                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:35%;">ID du Mod</th>
-                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:30%;">Nom du Mod</th>
-                            <th style="padding:10px;text-align:left;border-bottom:1px solid #333;width:12%;">Version</th>
-                            <th style="padding:10px;text-align:center;border-bottom:1px solid #333;width:23%;">Actions</th>
+                        <tr style="background:#252525;">
+                            <th style="padding:8px;text-align:left;border-bottom:1px solid #333;font-size:12px;">Mod ID</th>
+                            <th style="padding:8px;text-align:left;border-bottom:1px solid #333;font-size:12px;">Nom</th>
+                            <th style="padding:8px;text-align:center;border-bottom:1px solid #333;font-size:12px;width:80px;">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="modsList">
+                    <tbody id="configModsList">
+                        <!-- Les mods seront ajoutés dynamiquement ici -->
                     </tbody>
                 </table>
-                <button class="btn btn-start" type="button" onclick="addModRow()">+ Ajouter un mod</button>
+
+                <small style="color:#888;font-size:11px;display:block;margin-top:8px;">
+                    💡 Les Mod IDs sont disponibles sur le Steam Workshop (16 caractères hexadécimaux)
+                </small>
             </div>
-            <button class="btn btn-start" onclick="saveSettings()" style="margin-top:20px;width:100%;background:var(--success);">ENREGISTRER LA CONFIGURATION</button>
-        </div>
+
+            <!-- Boutons d'action -->
+            <div style="display:flex;gap:10px;justify-content:flex-end;padding-top:15px;border-top:1px solid #333;">
+                <button type="button" class="btn" onclick="cancelConfigForm()"
+                        style="background:#666;font-size:14px;padding:10px 20px;">
+                    Annuler
+                </button>
+                <button type="submit" id="configSaveBtn" class="btn btn-start"
+                        style="font-size:14px;padding:10px 20px;">
+                    Créer la configuration
+                </button>
+            </div>
+        </form>
     </div>
+</div>
     <div id="dashboard" class="tab-content">
         <h2>Sauvegardes de configurations</h2>
         <input type="text" id="searchPreset" placeholder="Rechercher un preset..." style="margin-bottom:10px;width:300px;padding:8px;">
@@ -450,6 +586,77 @@
         </form>
         <div id="addUserMsg" style="margin-top:10px;"></div>
     </div>
+
+    <!-- Onglet Référence -->
+    <div id="reference" class="tab-content">
+        <h2 style="margin-bottom:30px;">📚 Référence - Missions & Mods</h2>
+
+        <!-- SECTION MISSIONS VANILLA -->
+        <div style="margin-bottom:40px;">
+            <h3 style="color:var(--accent);margin-bottom:15px;">🎮 Missions Vanilla</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+
+                <!-- Formulaire d'ajout -->
+                <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                    <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">➕ Ajouter une mission</h4>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <input type="text" id="new_mission_name" placeholder="Nom de la mission"
+                               style="flex:1;min-width:200px;padding:10px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                        <input type="text" id="new_mission_id" placeholder="{GUID}Missions/xxx.conf"
+                               style="flex:2;min-width:300px;padding:10px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                        <button class="btn btn-start" onclick="addMission()" style="padding:10px 20px;">Ajouter</button>
+                    </div>
+                </div>
+
+                <!-- Tableau des missions -->
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#252525;">
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:30%;">Nom</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:55%;">Scenario ID</th>
+                            <th style="padding:12px;text-align:center;border-bottom:1px solid #333;width:15%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="missionsRefList">
+                        <tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- SECTION MODS RÉFÉRENCE -->
+        <div style="margin-bottom:40px;">
+            <h3 style="color:var(--accent);margin-bottom:15px;">🔧 Mods Référence</h3>
+            <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+
+                <!-- Formulaire d'ajout -->
+                <div style="background:#1a1a1a;padding:15px;border-radius:8px;margin-bottom:20px;">
+                    <h4 style="color:var(--accent);margin:0 0 15px 0;font-size:14px;">➕ Ajouter un mod</h4>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <input type="text" id="new_mod_name" placeholder="Nom du mod"
+                               style="flex:2;min-width:200px;padding:10px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                        <input type="text" id="new_mod_id" placeholder="ModID (16 caractères hex)"
+                               style="flex:1;min-width:150px;padding:10px;background:#333;border:1px solid #444;color:white;border-radius:4px;">
+                        <button class="btn btn-start" onclick="addMod()" style="padding:10px 20px;">Ajouter</button>
+                    </div>
+                </div>
+
+                <!-- Tableau des mods -->
+                <table style="width:100%;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#252525;">
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:60%;">Nom</th>
+                            <th style="padding:12px;text-align:left;border-bottom:1px solid #333;width:25%;">Mod ID</th>
+                            <th style="padding:12px;text-align:center;border-bottom:1px solid #333;width:15%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modsRefList">
+                        <tr><td colspan="3" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- MODAL: LOGIN JWT -->
@@ -487,6 +694,38 @@
         👤 <span id="userDisplay">Loading...</span>
         <button onclick="handleLogout()" style="background:none;border:none;color:#c0392b;cursor:pointer;margin-left:10px;padding:0;font-weight:bold;">LOGOUT</button>
     </span>
+</div>
+
+<!-- MODALE: Missions Vanilla -->
+<div id="missionsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border-radius:8px;padding:30px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.9);border:2px solid var(--accent);">
+        <h2 style="color:var(--accent);margin-top:0;margin-bottom:20px;">📋 Missions Vanilla</h2>
+        <p style="color:#888;font-size:13px;margin-bottom:20px;">Cliquez sur une mission pour remplir le champ automatiquement</p>
+
+        <div id="missionsList" style="display:flex;flex-direction:column;gap:8px;">
+            <!-- Rempli dynamiquement par JavaScript -->
+        </div>
+
+        <div style="margin-top:20px;text-align:right;">
+            <button class="btn" onclick="closeMissionsModal()" style="background:#666;">Fermer</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODALE: Mods de Référence -->
+<div id="modsModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:10000;align-items:center;justify-content:center;">
+    <div style="background:var(--card);border-radius:8px;padding:30px;max-width:600px;max-height:80vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.9);border:2px solid var(--accent);">
+        <h2 style="color:var(--accent);margin-top:0;margin-bottom:20px;">🎮 Mods de Référence</h2>
+        <p style="color:#888;font-size:13px;margin-bottom:20px;">Cliquez sur un mod pour l'ajouter à votre configuration</p>
+
+        <div id="modsList" style="display:flex;flex-direction:column;gap:8px;">
+            <!-- Rempli dynamiquement par JavaScript -->
+        </div>
+
+        <div style="margin-top:20px;text-align:right;">
+            <button class="btn btn-start" onclick="closeModsModal()">Fermer</button>
+        </div>
+    </div>
 </div>
 
 <footer style="text-align:center; margin-top:40px; color:#888;">

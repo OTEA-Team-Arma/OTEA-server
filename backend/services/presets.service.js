@@ -22,15 +22,19 @@ const LogService = require('./log.service');
 const PRESETS_DIR = path.join(__dirname, '..', '..', 'presets');
 
 /**
- * Schema de validation pour une configuration preset
+ * Schema de validation pour une configuration preset (format Arma Reforger natif)
  */
 const PRESET_SCHEMA = {
-    id: { required: true, type: 'string' },
-    name: { required: true, type: 'string' },
-    difficulty: { type: 'string' },
-    maxPlayers: { type: 'number' },
-    password: { type: 'string' },
-    port: { type: 'number' }
+    dedicatedServerId: { required: true, type: 'string' },
+    bindPort: { required: true, type: 'number' },
+    game: {
+        required: true,
+        type: 'object',
+        fields: {
+            name: { required: true, type: 'string' },
+            scenarioId: { required: true, type: 'string' }
+        }
+    }
 };
 
 /**

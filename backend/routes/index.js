@@ -17,6 +17,8 @@ const adminRoutes = require('./admin.routes');
 const userRoutes = require('./user.routes');
 const presetsRoutes = require('./presets.routes');
 const logsRoutes = require('./logs.routes');
+const configsRoutes = require('./configs.routes');
+const systemRoutes = require('./system.routes');
 
 // Import middleware
 const { authenticateJWT } = require('../middleware/jwt.middleware');
@@ -71,6 +73,9 @@ function setupRoutes(app) {
     protectedRouter.use('/admin', userRoutes);
     protectedRouter.use('/presets', presetsRoutes);
     protectedRouter.use('/logs', logsRoutes);
+    protectedRouter.use('/configs', configsRoutes);
+    protectedRouter.use('/system', systemRoutes);
+    console.log('[Routes] system routes mounted at /api/system');
 
     // Monter le router protégé sur /api
     app.use('/api', protectedRouter);
