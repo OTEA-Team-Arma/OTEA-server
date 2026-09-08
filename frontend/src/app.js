@@ -100,14 +100,14 @@ async function loadDashboard() {
     await refreshDashboardServers();
     await loadDashboardSystemInfo();
 
-    // Démarrer le rafraîchissement automatique toutes les 10 secondes
+    // Démarrer le rafraîchissement automatique toutes les 60 secondes
     if (dashboardRefreshInterval) {
         clearInterval(dashboardRefreshInterval);
     }
     dashboardRefreshInterval = setInterval(() => {
         refreshDashboardServers();
         loadDashboardSystemInfo();
-    }, 10000);
+    }, 60000);
 }
 
 /**
