@@ -112,14 +112,6 @@ class ArmaServerService {
                     crossPlatform: false,
                     mods: cleanMods
                 },
-                gameProperties: {
-                    serverMaxViewDistance: data.gameProperties?.serverMaxViewDistance ?? 1600,
-                    serverMinGrassDistance: data.gameProperties?.serverMinGrassDistance ?? 0,
-                    networkViewDistance: data.gameProperties?.networkViewDistance ?? 500,
-                    disableThirdPerson: data.gameProperties?.disableThirdPerson ?? false,
-                    fastValidation: data.gameProperties?.fastValidation ?? true,
-                    battlEye: data.gameProperties?.battlEye ?? true
-                },
                 rcon: {
                     address: data.rcon?.address || '0.0.0.0',
                     port: data.rcon?.port ?? 19999,
