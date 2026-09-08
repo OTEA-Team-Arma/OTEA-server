@@ -444,19 +444,20 @@
                     <input type="number" id="config_rcon_maxClients" min="1" max="64" value="16" required>
                 </div>
 
-                <hr style="margin:15px 0;border:0;border-top:1px solid #333;">
-                <h5 style="color:var(--accent);margin:10px 0;font-size:12px;">Paramètres de lancement</h5>
+                <div style="margin-top:20px;">
+                    <h4 style="color:var(--accent);margin-bottom:15px;">⚡ Paramètres de lancement</h4>
 
-                <div class="form-group">
-                    <label>FPS maximum (-maxFPS)</label>
-                    <input type="number" id="config_launch_maxFPS" min="0" max="240" value="60" required>
-                    <small style="color:#888;font-size:11px;">Limite de FPS du serveur (0 = illimité)</small>
-                </div>
+                    <div class="form-group">
+                        <label>FPS maximum serveur (-maxFPS)</label>
+                        <input type="number" id="config_launch_maxFPS" min="10" max="200" value="60">
+                        <small style="color:#888;font-size:11px;">Limite CPU du processus serveur (10-200)</small>
+                    </div>
 
-                <div class="form-group">
-                    <label>Interval stats de log (-logStats)</label>
-                    <input type="number" id="config_launch_logStats" min="0" max="3600" value="10" required>
-                    <small style="color:#888;font-size:11px;">Fréquence des stats dans les logs en secondes (0 = désactivé)</small>
+                    <div class="form-group">
+                        <label>Intervalle stats log en secondes (-logStats, 0 = désactivé)</label>
+                        <input type="number" id="config_launch_logStats" min="0" max="60" value="10">
+                        <small style="color:#888;font-size:11px;">Fréquence de log des statistiques serveur (0-60s)</small>
+                    </div>
                 </div>
             </div>
 
