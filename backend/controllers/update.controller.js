@@ -35,7 +35,7 @@ class UpdateController {
                 );
             }
 
-            await LogService.logAction('update-triggered', req.user?.name || 'system', {
+            await LogService.logAction('update-triggered', req.user?.username || 'system', {
                 ip: req.ip,
                 steamCmdPath,
                 armaPath
@@ -48,7 +48,7 @@ class UpdateController {
                 { maxRetries: 3, retryDelay: 5000 }
             );
 
-            await LogService.logAction('update-completed', req.user?.name || 'system', {
+            await LogService.logAction('update-completed', req.user?.username || 'system', {
                 ip: req.ip,
                 version: result.version,
                 attempt: result.attempt
@@ -56,7 +56,7 @@ class UpdateController {
 
             return res.json(success(result, 'Update completed successfully'));
         } catch (err) {
-            await LogService.logAction('update-error', req.user?.name || 'system', {
+            await LogService.logAction('update-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -94,7 +94,7 @@ class UpdateController {
             const installed = await ArmaVersionService.getInstalledVersion(armaPath);
             const available = await ArmaVersionService.getAvailableVersion(steamCmdPath);
 
-            await LogService.logAction('update-check', req.user?.name || 'system', {
+            await LogService.logAction('update-check', req.user?.username || 'system', {
                 ip: req.ip,
                 updateAvailable
             });
@@ -156,7 +156,7 @@ class UpdateController {
 
             const verified = UpdateService.verifyUpdate(installed, expected);
 
-            await LogService.logAction('update-verified', req.user?.name || 'system', {
+            await LogService.logAction('update-verified', req.user?.username || 'system', {
                 ip: req.ip,
                 verified,
                 installed,
