@@ -87,99 +87,211 @@ window.addEventListener('load', () => {
     }
 });
 
-// --- GESTION MODS TABLEAU ---
-window.addModRow = function addModRow() {
-    const tbody = document.getElementById('modsList');
-    const row = document.createElement('tr');
-    row.style.borderBottom = '1px solid #333';
-    row.innerHTML = `
-        <td style="padding:10px;"><input type="text" class="mod-id" placeholder="ID du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-        <td style="padding:10px;"><input type="text" class="mod-name" placeholder="Nom du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-        <td style="padding:10px;"><input type="text" class="mod-version" placeholder="Version" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-        <td style="padding:10px;text-align:center;">
-            <button class="btn" type="button" onclick="moveModUp(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↑</button>
-            <button class="btn" type="button" onclick="moveModDown(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↓</button>
-            <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
-        </td>
-    `;
-    tbody.appendChild(row);
-};
+// ============================================================================
+// DASHBOARD - NOUVEAU SYSTÈME
+// ============================================================================
 
-window.moveModUp = function moveModUp(row) {
-    const prevRow = row.previousElementSibling;
-    if (prevRow) {
-        row.parentNode.insertBefore(row, prevRow);
+let dashboardRefreshInterval = null;
+
+/**
+ * Charge le dashboard complet
+ */
+async function loadDashboard() {
+    await refreshDashboardServers();
+    await loadDashboardSystemInfo();
+
+    // Démarrer le rafraîchissement automatique toutes les 10 secondes
+    if (dashboardRefreshInterval) {
+        clearInterval(dashboardRefreshInterval);
     }
-};
+    dashboardRefreshInterval = setInterval(() => {
+        refreshDashboardServers();
+        loadDashboardSystemInfo();
+    }, 10000);
+}
 
-window.moveModDown = function moveModDown(row) {
-    const nextRow = row.nextElementSibling;
-    if (nextRow) {
-        row.parentNode.insertBefore(nextRow, row);
-    }
-};
+/**
+ * Rafraîchit la liste des serveurs
+ */
+async function refreshDashboardServers() {
+    try {
+        // Récupérer la liste des configurations
+        const configsResponse = await apiRequest('/configs', 'GET');
+        const configs = configsResponse?.data || [];
 
-window.getModsFromTable = function getModsFromTable() {
-    const rows = document.querySelectorAll('#modsList tr');
-    const mods = [];
-    rows.forEach(row => {
-        const modId = row.querySelector('.mod-id').value.trim();
-        if (modId) {
-            mods.push({
-                modId: modId,
-                name: row.querySelector('.mod-name').value.trim(),
-                version: row.querySelector('.mod-version').value.trim()
-            });
+        // Récupérer le statut des serveurs
+        const serversResponse = await apiRequest('/servers', 'GET');
+        const servers = serversResponse?.data?.servers || [];
+
+        const tbody = document.getElementById('dashboardServersList');
+        if (!tbody) return;
+
+        if (configs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Aucune configuration disponible</td></tr>';
+            return;
         }
-    });
-    return mods;
-};
 
-window.fillModsTable = function fillModsTable(mods) {
-    const tbody = document.getElementById('modsList');
-    tbody.innerHTML = '';
-    if (mods && Array.isArray(mods)) {
-        mods.forEach(mod => {
-            const row = document.createElement('tr');
-            row.style.borderBottom = '1px solid #333';
-            row.innerHTML = `
-                <td style="padding:10px;"><input type="text" class="mod-id" value="${mod.modId || ''}" placeholder="ID du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-                <td style="padding:10px;"><input type="text" class="mod-name" value="${mod.name || ''}" placeholder="Nom du mod" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-                <td style="padding:10px;"><input type="text" class="mod-version" value="${mod.version || ''}" placeholder="Version" style="width:100%;padding:8px;background:#333;border:1px solid #444;color:white;border-radius:4px;box-sizing:border-box;"></td>
-                <td style="padding:10px;text-align:center;">
-                    <button class="btn" type="button" onclick="moveModUp(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↑</button>
-                    <button class="btn" type="button" onclick="moveModDown(this.closest('tr'))" style="background:#3498db;padding:6px 8px;margin-right:2px;cursor:pointer;">↓</button>
-                    <button class="btn btn-delete" type="button" onclick="this.closest('tr').remove()">×</button>
-                </td>
+        // Mapper les configs avec leur statut
+        tbody.innerHTML = configs.map(config => {
+            const server = servers.find(s => s.port === config.port);
+            const isRunning = server && server.running;
+            const statusColor = isRunning ? '#27ae60' : '#c0392b';
+            const statusText = isRunning ? '🟢 EN LIGNE' : '🔴 HORS LIGNE';
+            const uptime = isRunning ? (server.uptime || '-') : '-';
+
+            return `
+                <tr style="border-bottom:1px solid #333;">
+                    <td style="padding:12px;">${config.name || 'Sans nom'}</td>
+                    <td style="padding:12px;color:var(--accent);font-weight:bold;">${config.port}</td>
+                    <td style="padding:12px;"><span style="color:${statusColor};font-weight:bold;">${statusText}</span></td>
+                    <td style="padding:12px;color:#999;">${uptime}</td>
+                    <td style="padding:12px;text-align:center;">
+                        ${!isRunning ? `<button class="btn btn-start" onclick="startServerDashboard('${config.filename}', ${config.port})" style="font-size:11px;padding:6px 12px;">▶ Lancer</button>` : ''}
+                        ${isRunning ? `<button class="btn btn-delete" onclick="stopServerDashboard(${config.port})" style="font-size:11px;padding:6px 12px;">⏹ Arrêter</button>` : ''}
+                    </td>
+                </tr>
             `;
-            tbody.appendChild(row);
-        });
-    }
-};
+        }).join('');
 
-// --- GESTION PRESETS ---
-window.updateJsonPreview = function updateJsonPreview() {
-    if (typeof getPresetFromForm === 'function') {
-        const preset = getPresetFromForm();
-        document.getElementById('jsonPreview').textContent = JSON.stringify(preset, null, 2);
-    }
-};
-
-window.getPresetFromForm = function getPresetFromForm() {
-    return {
-        id: document.getElementById('preset_title').dataset.id || ('preset_' + Date.now()),
-        title: document.getElementById('preset_title').value,
-        name: document.getElementById('preset_title').value,
-        port: parseInt(document.getElementById('srv_port').value),
-        game: {
-            name: document.getElementById('srv_name').value,
-            maxPlayers: parseInt(document.getElementById('srv_players').value),
-            scenarioId: document.getElementById('mission_id').value,
-            scenarioName: document.getElementById('mission_name').value,
-            mods: getModsFromTable()
+    } catch (error) {
+        console.error('[refreshDashboardServers] Error:', error);
+        const tbody = document.getElementById('dashboardServersList');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:#c0392b;">Erreur lors du chargement</td></tr>';
         }
-    };
-};
+    }
+}
+
+/**
+ * Lance un serveur depuis le dashboard
+ */
+async function startServerDashboard(filename, port) {
+    try {
+        const response = await apiRequest('/servers/start', 'POST', { filename, port });
+
+        if (response && response.success) {
+            showNotification(`Serveur lancé sur le port ${port}`, 'success');
+            refreshDashboardServers();
+        } else {
+            showNotification(response?.message || 'Erreur lors du lancement', 'error');
+        }
+    } catch (error) {
+        console.error('[startServerDashboard] Error:', error);
+        showNotification('Erreur lors du lancement du serveur', 'error');
+    }
+}
+
+/**
+ * Arrête un serveur depuis le dashboard
+ */
+async function stopServerDashboard(port) {
+    if (!confirm(`Arrêter le serveur sur le port ${port} ?`)) {
+        return;
+    }
+
+    try {
+        const response = await apiRequest('/servers/stop', 'POST', { port });
+
+        if (response && response.success) {
+            showNotification(`Serveur arrêté (port ${port})`, 'success');
+            refreshDashboardServers();
+        } else {
+            showNotification(response?.message || 'Erreur lors de l\'arrêt', 'error');
+        }
+    } catch (error) {
+        console.error('[stopServerDashboard] Error:', error);
+        showNotification('Erreur lors de l\'arrêt du serveur', 'error');
+    }
+}
+
+/**
+ * Charge les informations système
+ */
+async function loadDashboardSystemInfo() {
+    try {
+        // Version Arma - essayer d'abord system-info, puis updates/check
+        const armaVersionEl = document.getElementById('dashboardArmaVersion');
+        if (armaVersionEl) {
+            try {
+                const systemInfoResponse = await apiRequest('/admin/system-info', 'GET');
+                console.log('[Dashboard] GET /api/admin/system-info:', systemInfoResponse);
+
+                if (systemInfoResponse?.data?.armaVersion) {
+                    armaVersionEl.textContent = systemInfoResponse.data.armaVersion;
+                } else {
+                    // Fallback sur updates/check
+                    const updateResponse = await apiRequest('/updates/check', 'GET');
+                    console.log('[Dashboard] GET /api/updates/check:', updateResponse);
+
+                    const version = updateResponse?.installed || updateResponse?.data?.installed || '-';
+                    armaVersionEl.textContent = version;
+                }
+            } catch (err) {
+                console.error('[Dashboard] Error fetching Arma version:', err);
+                armaVersionEl.textContent = '-';
+            }
+        }
+
+        // Uptime serveur
+        const infoResponse = await apiRequest('/info', 'GET');
+        console.log('[Dashboard] GET /api/info:', infoResponse);
+        const uptimeEl = document.getElementById('dashboardOteaUptime');
+        if (uptimeEl && infoResponse?.data?.uptime) {
+            const uptimeSeconds = Math.floor(infoResponse.data.uptime);
+            const hours = Math.floor(uptimeSeconds / 3600);
+            const minutes = Math.floor((uptimeSeconds % 3600) / 60);
+            uptimeEl.textContent = `${hours}h ${minutes}m`;
+        }
+
+        // Derniers logs Arma
+        const logsEl = document.getElementById('dashboardRecentLogs');
+        if (logsEl) {
+            try {
+                // Récupérer le premier serveur en ligne
+                const serversRes = await apiRequest('/servers', 'GET');
+                console.log('[Dashboard] GET /api/servers:', serversRes);
+                const servers = serversRes?.data?.servers || [];
+
+                if (servers.length > 0) {
+                    const runningServer = servers.find(s => s.running);
+
+                    if (runningServer) {
+                        const port = runningServer.port;
+
+                        // Essayer l'endpoint logs
+                        const logsResponse = await apiRequest('/logs/arma?limit=5', 'GET');
+                        console.log('[Dashboard] GET /api/logs/arma?limit=5:', logsResponse);
+
+                        if (logsResponse?.data && Array.isArray(logsResponse.data)) {
+                            const logs = logsResponse.data.slice(-5); // 5 dernières lignes
+                            if (logs.length > 0) {
+                                logsEl.innerHTML = logs.map(log => {
+                                    const time = log.date ? new Date(log.date).toLocaleTimeString('fr-FR') : '';
+                                    const message = log.message || log.action || log.line || '';
+                                    return `<span style="color:#888;">[${time}]</span> ${message}`;
+                                }).join('<br>');
+                            } else {
+                                logsEl.innerHTML = '<span style="color:#888;">Aucun log récent</span>';
+                            }
+                        } else {
+                            logsEl.innerHTML = '<span style="color:#888;">Logs non disponibles</span>';
+                        }
+                    } else {
+                        logsEl.innerHTML = '<span style="color:#888;">Aucun serveur actif</span>';
+                    }
+                } else {
+                    logsEl.innerHTML = '<span style="color:#888;">Aucun serveur actif</span>';
+                }
+            } catch (err) {
+                console.error('[Dashboard] Error fetching logs:', err);
+                logsEl.innerHTML = '<span style="color:#888;">Erreur chargement logs</span>';
+            }
+        }
+
+    } catch (error) {
+        console.error('[loadDashboardSystemInfo] Error:', error);
+    }
+}
 
 // --- NAVIGATION ---
 window.openTab = function (id) {
@@ -193,7 +305,7 @@ window.openTab = function (id) {
             btn.classList.add('active');
         }
     });
-    if(id === 'dashboard') {loadPresets();}
+    if(id === 'dashboard') {loadDashboard();}
     if(id === 'configuration') {loadConfigsList();}
     if(id === 'adminlog') {loadAdminLog();}
     if(id === 'armaServer') {loadArmaServerInfo();}
@@ -281,52 +393,8 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
-// --- GESTION PRESETS ---
-async function loadPresets() {
-    const presets = await apiRequest('/presets');
-    window._allPresets = presets?.data?.presets || [];
-    renderPresetList();
-}
-
-function renderPresetList() {
-    const presets = (window._allPresets || []);
-    const tbodyElements = document.querySelectorAll('#presetList');
-
-    const content = !presets.length
-        ? '<tr><td colspan="4" style="text-align:center;color:#888;">Aucun preset enregistré</td></tr>'
-        : presets.map(p => `
-            <tr>
-                <td><a href="#" onclick="fillPresetForm(window._allPresets.find(x=>x.id==='${p.id}'))">${p.title}</a></td>
-                <td><span style="background:#3a4a5a;padding:4px 8px;border-radius:3px;font-weight:bold;color:var(--accent);">:${p.port}</span><br><small style="color:#888;font-size:11px;margin-top:3px;display:block;">➜ Configurable</small></td>
-                <td>${p.game.scenarioId.substring(0, 20)}...</td>
-                <td>
-                    <button class="btn btn-start" onclick="launchServer('${p.id}')" title="Clique pour configurer le port">▶ Start</button>
-                    <button class="btn btn-delete" onclick="deletePreset('${p.id}')">Delete</button>
-                    <button class="btn btn-edit" onclick="stopServer('${p.id}')">Stop</button>
-                </td>
-            </tr>
-        `).join('');
-
-    tbodyElements.forEach(tbody => {
-        tbody.innerHTML = content;
-    });
-}
-
-// Mise à jour de l'aperçu JSON en temps réel sur modification du formulaire preset
-// Désactivé: l'élément jsonPreview n'existe pas dans le HTML
-// if (document.getElementById('presetForm')) {
-//     document.getElementById('presetForm').addEventListener('input', window.updateJsonPreview);
-// }
-
 document.addEventListener('DOMContentLoaded', function () {
-    // updateJsonPreview();  // Disabled - element doesn't exist
     document.getElementById('defaultTab').click();
-});
-
-document.addEventListener('input', function (e) {
-    if (e.target && e.target.id === 'searchPreset') {
-        renderPresetList();
-    }
 });
 
 // --- ADMIN LOG ---
@@ -590,115 +658,6 @@ async function addUser(event) {
         msgDiv.textContent = 'Erreur réseau.';
     }
     return false;
-}
-
-// --- ACTIONS PRESETS ---
-async function fillPresetForm(preset) {
-    if (!preset) {return;}
-    document.getElementById('preset_title').value = preset.title;
-    document.getElementById('preset_title').dataset.id = preset.id;
-    document.getElementById('srv_name').value = preset.game.name;
-    document.getElementById('srv_port').value = preset.port;
-    document.getElementById('srv_players').value = preset.game.maxPlayers;
-    document.getElementById('mission_id').value = preset.game.scenarioId;
-    document.getElementById('mission_name').value = preset.game.scenarioName || '';
-    fillModsTable(preset.game.mods);
-    openTab('settings');
-}
-
-async function saveSettings() {
-    const preset = getPresetFromForm();
-    await apiRequest('/presets', 'POST', preset);
-    alert('Preset sauvegardé !');
-    openTab('dashboard');
-}
-
-async function deletePreset(id) {
-    if (confirm('Supprimer ce preset ?')) {
-        await apiRequest(`/presets/${id}`, 'DELETE');
-        loadPresets();
-    }
-}
-
-// Montrer le modal de configuration du port
-function showPortConfigModal(id) {
-    const preset = (window._allPresets || []).find(p => p.id === id);
-    if (!preset) {return appendLog('Preset introuvable');}
-
-    // Stocker le preset ID temporairement
-    window._pendingLaunchId = id;
-
-    // Remplir le modal
-    document.getElementById('modalServerName').textContent = preset.title || preset.id;
-    document.getElementById('modalOriginalPort').textContent = preset.port || 2001;
-    document.getElementById('modalPortInput').value = preset.port || 2001;
-
-    // Afficher le modal
-    document.getElementById('portConfigModal').style.display = 'flex';
-
-    // Focus sur le champ port
-    setTimeout(() => document.getElementById('modalPortInput').focus(), 100);
-}
-
-function closePortModal() {
-    document.getElementById('portConfigModal').style.display = 'none';
-    window._pendingLaunchId = null;
-}
-
-// Valider et lancer avec le port configuré
-async function confirmPortAndLaunch() {
-    const presetId = window._pendingLaunchId;
-    const newPort = parseInt(document.getElementById('modalPortInput').value);
-
-    // Validation du port
-    if (!newPort || newPort < 1024 || newPort > 65535) {
-        alert('⚠️ Port invalide! Utilisez un port entre 1024 et 65535.');
-        return;
-    }
-
-    const preset = (window._allPresets || []).find(p => p.id === presetId);
-    if (!preset) {return appendLog('Preset introuvable');}
-
-    // Mettre à jour le port du preset temporairement
-    preset.port = newPort;
-
-    closePortModal();
-
-    appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${newPort}...`);
-    const result = await apiRequest('/servers', 'POST', {port: newPort, name: preset.title});
-
-    if (result && result.success) {
-        appendLog(`✅ Serveur lancé avec succès sur le port ${newPort}!`);
-    }
-
-    renderPresetList();
-}
-
-async function launchServer(id) {
-    // Lancer directement sans modal
-    const preset = (window._allPresets || []).find(p => p.id === id);
-    if (!preset) {return appendLog('Preset introuvable');}
-
-    appendLog(`🚀 Lancement du serveur "${preset.title}" sur le port ${preset.port}...`);
-    const result = await apiRequest('/servers', 'POST', {
-        port: preset.port,
-        name: preset.title,
-        config: preset.game
-    });
-
-    if (result && result.success) {
-        appendLog(`✅ Serveur lancé avec succès sur le port ${preset.port}!`);
-    }
-
-    renderPresetList();
-}
-
-async function stopServer(id) {
-    const preset = (window._allPresets || []).find(p => p.id === id);
-    if (!preset) {return appendLog('Preset introuvable');}
-    appendLog('Arrêt du serveur sur le port ' + preset.port + '...');
-    await apiRequest(`/servers/${preset.port}`, 'DELETE');
-    renderPresetList();
 }
 
 // --- GESTION ARMA REFORGER SERVER ---

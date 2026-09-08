@@ -426,12 +426,62 @@
     </div>
 </div>
     <div id="dashboard" class="tab-content">
-        <h2>Sauvegardes de configurations</h2>
-        <input type="text" id="searchPreset" placeholder="Rechercher un preset..." style="margin-bottom:10px;width:300px;padding:8px;">
-        <table>
-            <thead><tr><th>Titre</th><th>Port</th><th>Mission</th><th>Actions</th></tr></thead>
-            <tbody id="presetList"></tbody>
-        </table>
+        <h2 style="margin-bottom:30px;">Dashboard</h2>
+
+        <!-- Layout 2 colonnes -->
+        <div style="display:flex;gap:20px;flex-wrap:wrap;">
+
+            <!-- SECTION GAUCHE : Serveurs actifs -->
+            <div style="flex:1;min-width:600px;">
+                <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">🖥️ Serveurs</h3>
+                <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#252525;">
+                                <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Config</th>
+                                <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Port</th>
+                                <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Statut</th>
+                                <th style="padding:12px;text-align:left;border-bottom:1px solid #333;">Uptime</th>
+                                <th style="padding:12px;text-align:center;border-bottom:1px solid #333;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dashboardServersList">
+                            <tr><td colspan="5" style="text-align:center;padding:20px;color:#888;">Chargement...</td></tr>
+                        </tbody>
+                    </table>
+                    <button class="btn btn-edit" onclick="refreshDashboardServers()" style="margin-top:15px;font-size:12px;">🔄 Rafraîchir</button>
+                </div>
+            </div>
+
+            <!-- SECTION DROITE : Informations système -->
+            <div style="flex:0 0 350px;min-width:300px;">
+                <h3 style="color:var(--accent);margin-bottom:15px;font-size:16px;">📊 Système</h3>
+                <div class="card" style="background:var(--card);border-radius:10px;padding:20px;box-shadow:0 2px 12px #0003;">
+
+                    <!-- Version Arma -->
+                    <div style="margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #333;">
+                        <h4 style="color:#999;font-size:12px;margin:0 0 8px 0;">Arma Reforger Server</h4>
+                        <div style="color:var(--accent);font-size:18px;font-weight:bold;" id="dashboardArmaVersion">-</div>
+                    </div>
+
+                    <!-- Uptime serveur -->
+                    <div style="margin-bottom:20px;padding-bottom:15px;border-bottom:1px solid #333;">
+                        <h4 style="color:#999;font-size:12px;margin:0 0 8px 0;">Uptime serveur</h4>
+                        <div style="color:var(--accent);font-size:18px;font-weight:bold;" id="dashboardOteaUptime">-</div>
+                    </div>
+
+                    <!-- Derniers logs -->
+                    <div>
+                        <h4 style="color:#999;font-size:12px;margin:0 0 8px 0;">Derniers logs Arma</h4>
+                        <div id="dashboardRecentLogs" style="background:#000;color:#00ff00;padding:10px;border-radius:4px;font-family:'Courier New',monospace;font-size:11px;max-height:150px;overflow-y:auto;line-height:1.4;">
+                            Chargement...
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <!-- Section Mods & Missions fusionnée dans Réglages du serveur -->
