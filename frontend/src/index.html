@@ -443,6 +443,21 @@
                     <label>Clients RCON max</label>
                     <input type="number" id="config_rcon_maxClients" min="1" max="64" value="16" required>
                 </div>
+
+                <hr style="margin:15px 0;border:0;border-top:1px solid #333;">
+                <h5 style="color:var(--accent);margin:10px 0;font-size:12px;">Paramètres de lancement</h5>
+
+                <div class="form-group">
+                    <label>FPS maximum (-maxFPS)</label>
+                    <input type="number" id="config_launch_maxFPS" min="0" max="240" value="60" required>
+                    <small style="color:#888;font-size:11px;">Limite de FPS du serveur (0 = illimité)</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Interval stats de log (-logStats)</label>
+                    <input type="number" id="config_launch_logStats" min="0" max="3600" value="10" required>
+                    <small style="color:#888;font-size:11px;">Fréquence des stats dans les logs en secondes (0 = désactivé)</small>
+                </div>
             </div>
 
             <!-- Section Mods -->

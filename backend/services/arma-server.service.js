@@ -125,6 +125,10 @@ class ArmaServerService {
                     port: data.rcon?.port ?? 19999,
                     password: data.rcon?.password || '',
                     maxClients: data.rcon?.maxClients ?? 16
+                },
+                launchParams: {
+                    maxFPS: data.launchParams?.maxFPS ?? 60,
+                    logStats: data.launchParams?.logStats ?? 10
                 }
             };
 
@@ -281,7 +285,7 @@ class ArmaServerService {
 
             // Récupérer l'exécutable et les args depuis osAbstraction
             const executable = osAbstraction.getServerExecutable();
-            const args = osAbstraction.buildLaunchArgs(configPath, port);
+            const args = osAbstraction.buildLaunchArgs(configPath, port, config.game?.mods, config.launchParams);
 
             console.log(`[ArmaServerService] 📋 Launch command: ${executable} ${args.join(' ')}`);
 

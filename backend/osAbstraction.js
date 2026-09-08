@@ -334,13 +334,14 @@ function getServerExecutable() {
 }
 
 /**
- * buildLaunchArgs(configPath, port, addons)
+ * buildLaunchArgs(configPath, port, addons, launchParams)
  * Construit les arguments adaptés à l'OS pour lancer le serveur
  * @param {string} configPath - Chemin vers le fichier de configuration
  * @param {number} port - Port du serveur
  * @param {Array<string>} addons - Tableau optionnel de modIds (GUIDs)
+ * @param {Object} launchParams - Paramètres de lancement optionnels (maxFPS, logStats)
  */
-function buildLaunchArgs(configPath, port, addons) {
+function buildLaunchArgs(configPath, port, addons, launchParams) {
     if (!isInitialized) {
         throw new Error('osAbstraction not initialized. Call init() first.');
     }
@@ -369,6 +370,14 @@ function buildLaunchArgs(configPath, port, addons) {
         '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons',
         '-profile', profilePath
     );
+
+    // Ajouter paramètres de lancement optionnels
+    if (launchParams?.maxFPS && launchParams.maxFPS > 0) {
+        args.push('-maxFPS', String(launchParams.maxFPS));
+    }
+    if (launchParams?.logStats && launchParams.logStats > 0) {
+        args.push('-logStats', String(launchParams.logStats));
+    }
 
     // Ajouter -backendlog sur Linux
     if (platformDetected === 'linux' && config.backendLog) {

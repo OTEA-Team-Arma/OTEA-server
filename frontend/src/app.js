@@ -1137,6 +1137,10 @@ function showCreateConfigForm() {
     document.getElementById('config_rcon_password').value = '';
     document.getElementById('config_rcon_maxClients').value = '16';
 
+    // Réinitialiser launchParams
+    document.getElementById('config_launch_maxFPS').value = '60';
+    document.getElementById('config_launch_logStats').value = '10';
+
     // Vider la liste des mods
     document.getElementById('configModsList').innerHTML = '';
 
@@ -1185,6 +1189,10 @@ async function editConfig(filename) {
         document.getElementById('config_rcon_password').value = config.rcon?.password || '';
         document.getElementById('config_rcon_maxClients').value = config.rcon?.maxClients || 16;
 
+        // Remplir launchParams
+        document.getElementById('config_launch_maxFPS').value = config.launchParams?.maxFPS || 60;
+        document.getElementById('config_launch_logStats').value = config.launchParams?.logStats || 10;
+
         // Remplir la liste des mods
         fillConfigModsList(config.game?.mods || []);
 
@@ -1228,6 +1236,10 @@ async function saveConfig() {
                 port: parseInt(document.getElementById('config_rcon_port').value),
                 password: document.getElementById('config_rcon_password').value,
                 maxClients: parseInt(document.getElementById('config_rcon_maxClients').value)
+            },
+            launchParams: {
+                maxFPS: parseInt(document.getElementById('config_launch_maxFPS').value) || 60,
+                logStats: parseInt(document.getElementById('config_launch_logStats').value) || 10
             }
         };
 
