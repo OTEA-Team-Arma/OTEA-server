@@ -3,6 +3,11 @@
 // ============================================================================
 
 /**
+ * Variable globale pour le nom de la team (chargée depuis /api/system/app-config)
+ */
+let teamName = 'OTEA'; // Valeur par défaut
+
+/**
  * Wrapper pour remplacer Basic Auth par JWT
  * Retourne les headers d'authentification JWT
  */
@@ -65,20 +70,41 @@ function handleLogout() {
 /**
  * Initialiser l'UI au chargement
  */
-window.addEventListener('load', () => {
+window.addEventListener('load', async () => {
     // Vérifier l'authentification
     if (!AUTH_MODULE.isAuthenticated()) {
         showLoginModal();
         return;
     }
-    
+
+    // Charger le nom de la team depuis la config
+    try {
+        const appConfig = await apiRequest('/system/app-config', 'GET');
+        if (appConfig?.data?.teamName) {
+            teamName = appConfig.data.teamName;
+
+            // Mettre à jour tous les éléments de l'UI
+            const titleEl = document.getElementById('app-title');
+            if (titleEl) titleEl.textContent = `${teamName} - Admin Panel`;
+
+            const logsEl = document.getElementById('app-team-name-logs');
+            if (logsEl) logsEl.textContent = teamName;
+
+            const panelEl = document.getElementById('app-team-name-panel');
+            if (panelEl) panelEl.textContent = teamName;
+        }
+    } catch (error) {
+        console.error('[loadTeamName] Error:', error);
+        // Garder la valeur par défaut 'OTEA' en cas d'erreur
+    }
+
     // Afficher l'utilisateur connecté
     const user = AUTH_MODULE.getUser();
     const userDisplay = document.getElementById('userDisplay');
     if (userDisplay && user) {
         userDisplay.textContent = `${user.username} (${user.role})`;
     }
-    
+
     // Vérifier si token expiré
     if (AUTH_MODULE.isTokenExpired()) {
         AUTH_MODULE.showNotification('Session expired, please login again', 'error');
@@ -707,7 +733,7 @@ async function updateArmaServer() {
 }
 
 async function restartOTEA() {
-    if (!confirm('Êtes-vous sûr ? OTEA va redémarrer et sera temporairement indisponible.')) {
+    if (!confirm(`Êtes-vous sûr ? ${teamName} va redémarrer et sera temporairement indisponible.`)) {
         return;
     }
     document.getElementById('otearestartBtn').disabled = true;
@@ -715,7 +741,7 @@ async function restartOTEA() {
     try {
         const res = await apiRequest('/admin/restart-all', 'POST');
         document.getElementById('otearestartMsg').textContent = 'Redémarrage initié. La page va se rafraîchir...';
-        showNotification('⟳ Redémarrage d\'OTEA en cours...', 'warning');
+        showNotification(`⟳ Redémarrage de ${teamName} en cours...`, 'warning');
         setTimeout(() => {
             location.reload();
         }, 2000);

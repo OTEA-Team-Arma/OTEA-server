@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OTEA - Admin Panel</title>
+    <title id="app-title">OTEA - Admin Panel</title>
     <link rel="icon" type="image/svg+xml" href="../assets/img/favicon.svg">
     <style>
         :root { --bg: #121212; --card: #1e1e1e; --accent: #f39c12; --danger: #c0392b; --success: #27ae60; --text: #e0e0e0; }
@@ -242,7 +242,7 @@
                     
                     <!-- Tabs pour choisir le type de log -->
                     <div style="display:flex;gap:5px;margin-bottom:10px;border-bottom:1px solid #333;flex-wrap:wrap;">
-                        <button class="btn" id="logTabAdmin" onclick="switchLogTab('admin')" style="background:var(--accent);color:black;border-radius:0;padding:8px 15px;flex:1;min-width:150px;font-weight:bold;">📋 Logs Admin OTEA</button>
+                        <button class="btn" id="logTabAdmin" onclick="switchLogTab('admin')" style="background:var(--accent);color:black;border-radius:0;padding:8px 15px;flex:1;min-width:150px;font-weight:bold;">📋 Logs Admin <span id="app-team-name-logs">OTEA</span></button>
                         <button class="btn" id="logTabArma" onclick="switchLogTab('arma')" style="background:#555;color:white;border-radius:0;padding:8px 15px;flex:1;min-width:150px;">🎮 Logs Serveur Arma</button>
                     </div>
 
@@ -805,7 +805,7 @@
 <!-- MODAL: LOGIN JWT -->
 <div id="loginModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:10000;align-items:center;justify-content:center;">
     <div style="background:var(--card);border-radius:8px;padding:40px;max-width:350px;box-shadow:0 8px 32px rgba(0,0,0,0.9);border:2px solid var(--accent);">
-        <h1 style="color:var(--accent);text-align:center;margin-top:0;margin-bottom:30px;">🔐 OTEA Panel</h1>
+        <h1 style="color:var(--accent);text-align:center;margin-top:0;margin-bottom:30px;">🔐 <span id="app-team-name-panel">OTEA</span> Panel</h1>
         
         <form onsubmit="handleLogin(event)">
             <div style="margin-bottom:20px;">
