@@ -58,7 +58,8 @@ function _loadConfigWithPriority() {
     const envVars = {
         serverRootPath: process.env.ARMA_SERVER_ROOT,
         steamCmdPath: process.env.STEAMCMD_PATH,
-        backendLog: process.env.BACKEND_LOG ? process.env.BACKEND_LOG === 'true' : undefined
+        backendLog: process.env.BACKEND_LOG ? process.env.BACKEND_LOG === 'true' : undefined,
+        addonsDir: process.env.ARMA_ADDONS_DIR
     };
 
     // Fusionner: env vars > config.json
@@ -366,8 +367,11 @@ function buildLaunchArgs(configPath, port, addons, launchParams) {
         args.push('-addons', addons.join(','));
     }
 
+    // Utiliser le dossier addons du serveur dédié (configurable via env/config)
+    const addonsDir = config.addonsDir || path.join(serverRootPath, 'addons');
+
     args.push(
-        '-addonsDir', 'I:\\SteamLibrary\\steamapps\\common\\Arma Reforger\\addons',
+        '-addonsDir', addonsDir,
         '-profile', profilePath
     );
 

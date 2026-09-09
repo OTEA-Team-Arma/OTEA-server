@@ -332,6 +332,14 @@ class ArmaServerService {
             // Attacher le logger pour capturer les logs
             ArmaLogsService.attachLogger(proc, port);
 
+            // Nettoyer runningServers quand le process se termine
+            proc.on('exit', (code) => {
+                if (runningServers[port]) {
+                    delete runningServers[port];
+                    console.log(`[ArmaServerService] 🔴 Server exited on port ${port} (code ${code}) — removed from runningServers`);
+                }
+            });
+
             console.log(`[ArmaServerService] ✅ Server started: PID ${proc.pid}, port ${port}`);
 
             return {

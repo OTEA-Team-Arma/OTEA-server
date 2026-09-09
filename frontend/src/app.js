@@ -133,8 +133,8 @@ async function refreshDashboardServers() {
 
         // Mapper les configs avec leur statut
         tbody.innerHTML = configs.map(config => {
-            const server = servers.find(s => s.port === config.port);
-            const isRunning = server && server.running;
+            const server = servers.find(s => s.configFile === config.filename);
+            const isRunning = !!server;
             const statusColor = isRunning ? '#27ae60' : '#c0392b';
             const statusText = isRunning ? '🟢 EN LIGNE' : '🔴 HORS LIGNE';
             const uptime = isRunning ? (server.uptime || '-') : '-';
