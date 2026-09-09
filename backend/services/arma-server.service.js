@@ -110,7 +110,15 @@ class ArmaServerService {
                     maxPlayers: data.maxPlayers || 16,
                     visible: true,
                     crossPlatform: false,
-                    mods: cleanMods
+                    mods: cleanMods,
+                    gameProperties: {
+                        serverMaxViewDistance: data.gameProperties?.serverMaxViewDistance ?? 1600,
+                        serverMinGrassDistance: data.gameProperties?.serverMinGrassDistance ?? 50,
+                        networkViewDistance: data.gameProperties?.networkViewDistance ?? 500,
+                        disableThirdPerson: data.gameProperties?.disableThirdPerson ?? false,
+                        fastValidation: data.gameProperties?.fastValidation ?? true,
+                        battlEye: data.gameProperties?.battlEye ?? true
+                    }
                 },
                 ...(data.rcon?.password && data.rcon.password.length >= 3 ? {
                     rcon: {
@@ -372,8 +380,12 @@ class ArmaServerService {
 
         if (serverInfo) {
             try {
-                // Tuer le process par PID
-                process.kill(-serverInfo.proc.pid);
+                // Tuer le process par PID (syntaxe différente Windows/Linux)
+                if (process.platform === 'win32') {
+                    process.kill(serverInfo.proc.pid);
+                } else {
+                    process.kill(-serverInfo.proc.pid);
+                }
                 delete runningServers[port];
 
                 console.log(`[ArmaServerService] ✅ Server stopped: port ${port}`);

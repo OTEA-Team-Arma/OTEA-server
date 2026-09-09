@@ -167,6 +167,20 @@ async function refreshDashboardServers() {
  */
 async function startServerDashboard(filename, port) {
     try {
+        // Vérifier les conflits de port et l'état du serveur
+        const serversCheck = await apiRequest('/servers', 'GET');
+        const runningServers = serversCheck?.data?.servers || [];
+        const portConflict = runningServers.find(s => s.port === port && s.configFile !== filename);
+        if (portConflict) {
+            showNotification(`Port ${port} déjà utilisé par "${portConflict.configFile.replace('ServerConfig_', '').replace('.json', '')}"`, 'error');
+            return;
+        }
+        const alreadyRunning = runningServers.find(s => s.configFile === filename);
+        if (alreadyRunning) {
+            showNotification('Ce serveur est déjà en cours d\'exécution', 'error');
+            return;
+        }
+
         const response = await apiRequest('/servers/start', 'POST', { filename, port });
 
         if (response && response.success) {
@@ -1275,6 +1289,12 @@ async function saveConfig() {
             return;
         }
 
+        // Validation gameProperties: serverMinGrassDistance minimum 50
+        if (configData.gameProperties.serverMinGrassDistance < 50) {
+            configData.gameProperties.serverMinGrassDistance = 50;
+            showNotification('serverMinGrassDistance ajusté à 50 (minimum requis par Arma)', 'warning');
+        }
+
         // Enregistrer
         let endpoint = '/configs';
         let method = 'POST';
@@ -1340,6 +1360,20 @@ async function deleteConfig(filename) {
  */
 async function startServerFromConfig(filename, port) {
     try {
+        // Vérifier les conflits de port et l'état du serveur
+        const serversCheck = await apiRequest('/servers', 'GET');
+        const runningServers = serversCheck?.data?.servers || [];
+        const portConflict = runningServers.find(s => s.port === port && s.configFile !== filename);
+        if (portConflict) {
+            showNotification(`Port ${port} déjà utilisé par "${portConflict.configFile.replace('ServerConfig_', '').replace('.json', '')}"`, 'error');
+            return;
+        }
+        const alreadyRunning = runningServers.find(s => s.configFile === filename);
+        if (alreadyRunning) {
+            showNotification('Ce serveur est déjà en cours d\'exécution', 'error');
+            return;
+        }
+
         const response = await apiRequest('/servers/start', 'POST', { filename, port });
 
         if (response && response.success) {
