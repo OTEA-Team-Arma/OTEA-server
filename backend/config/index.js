@@ -72,6 +72,13 @@ const SECURITY = {
 };
 
 // ============================================================================
+// APPLICATION CONFIGURATION
+// ============================================================================
+const APP = {
+    TEAM_NAME: process.env.TEAM_NAME || 'OTEA',
+};
+
+// ============================================================================
 // VALIDATION: Check required configs
 // ============================================================================
 function validateConfig() {
@@ -104,5 +111,6 @@ module.exports = {
     ARMA,
     LOGGING,
     SECURITY,
+    APP,
     validateConfig,
 };

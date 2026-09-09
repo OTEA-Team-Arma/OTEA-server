@@ -113,7 +113,33 @@ async function updateSystemPaths(req, res) {
     }
 }
 
+/**
+ * GET /api/system/app-config
+ * Retourne la configuration de l'application (nom de team, etc.)
+ */
+async function getAppConfig(req, res) {
+    try {
+        const { APP } = require('../config');
+
+        res.json({
+            success: true,
+            data: {
+                teamName: APP.TEAM_NAME
+            }
+        });
+
+    } catch (error) {
+        console.error('[system.controller] Error in getAppConfig:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de la lecture de la configuration',
+            error: error.message
+        });
+    }
+}
+
 module.exports = {
     getSystemPaths,
-    updateSystemPaths
+    updateSystemPaths,
+    getAppConfig
 };

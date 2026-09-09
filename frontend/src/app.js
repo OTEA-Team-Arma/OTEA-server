@@ -1071,6 +1071,11 @@ async function loadConfigsList() {
 
         const configs = response.data;
         console.log('[loadConfigsList] Configs loaded:', configs.length);
+
+        // Récupérer le statut des serveurs
+        const serversResponse = await apiRequest('/servers', 'GET');
+        const servers = serversResponse?.data?.servers || [];
+
         const listContainer = document.getElementById('configsList');
 
         if (!listContainer) return;
@@ -1086,7 +1091,11 @@ async function loadConfigsList() {
             return;
         }
 
-        listContainer.innerHTML = configs.map(config => `
+        listContainer.innerHTML = configs.map(config => {
+            const server = servers.find(s => s.configFile === config.filename);
+            const isRunning = !!server;
+
+            return `
             <tr>
                 <td style="padding:12px;">${config.name || 'Sans nom'}</td>
                 <td style="padding:12px;">${config.port || '-'}</td>
@@ -1094,12 +1103,16 @@ async function loadConfigsList() {
                 <td style="padding:12px;">${config.maxPlayers || 0}</td>
                 <td style="padding:12px;">${config.mods === 0 ? '-' : config.mods}</td>
                 <td style="padding:12px;">
-                    <button class="btn btn-start" onclick="startServerFromConfig('${config.filename}', ${config.port})">Lancer</button>
+                    ${isRunning
+                        ? `<button class="btn btn-delete" onclick="stopServerDashboard(${config.port})" style="min-width:80px;">⏹ Arrêter</button>`
+                        : `<button class="btn btn-start" onclick="startServerFromConfig('${config.filename}', ${config.port})" style="min-width:80px;">▶ Lancer</button>`
+                    }
                     <button class="btn btn-edit" onclick="editConfig('${config.filename}')">Modifier</button>
                     <button class="btn btn-delete" onclick="deleteConfig('${config.filename}')">Supprimer</button>
                 </td>
             </tr>
-        `).join('');
+            `;
+        }).join('');
 
     } catch (error) {
         console.error('loadConfigsList error:', error);
@@ -1773,6 +1786,12 @@ async function loadSystemPaths() {
         document.getElementById('status_profilePath').textContent = response.serverProfile?.exists ? '✅' : '❌';
         document.getElementById('status_steamCmdPath').textContent = response.steamCmd?.exists ? '✅' : '❌';
 
+        // Charger la configuration de l'application
+        const appConfig = await apiRequest('/system/app-config', 'GET');
+        if (appConfig?.data?.teamName) {
+            document.getElementById('system_teamName').value = appConfig.data.teamName;
+        }
+
     } catch (error) {
         console.error('[loadSystemPaths] Error:', error);
         showNotification('Erreur lors du chargement des chemins système', 'error');
@@ -1788,7 +1807,8 @@ async function saveSystemPaths() {
             serverPath: document.getElementById('system_serverPath').value.trim(),
             addonsDir: document.getElementById('system_addonsDir').value.trim(),
             profilePath: document.getElementById('system_profilePath').value.trim(),
-            steamCmdPath: document.getElementById('system_steamCmdPath').value.trim()
+            steamCmdPath: document.getElementById('system_steamCmdPath').value.trim(),
+            teamName: document.getElementById('system_teamName').value.trim()
         };
 
         console.log('[saveSystemPaths] Sending:', data);
