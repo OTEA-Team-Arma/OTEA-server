@@ -1,17 +1,16 @@
-# OTEA-Server v2.4 🎮
+# OTEA-Server v2.5 🎮
 
 **Arma Reforger Server Management Panel - Production Ready**
 
-[![Tests](https://img.shields.io/badge/tests-27%2F27%20passing-brightgreen)](docs/PROJECT_STATUS.md)
+[![Tests](https://img.shields.io/badge/tests-passing-brightgreen)](docs/PROJECT_STATUS.md)
 [![Security](https://img.shields.io/badge/security-JWT%20%2B%20RBAC-blue)](docs/DEPLOYMENT/SECURITY_PLAN.md)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![Docker Ready](https://img.shields.io/badge/docker-ready-0db7ed)](docs/DEPLOYMENT/DOCKER_QUICKSTART.md)
 
 ---
 
 ## 🎯 What is OTEA-Server?
 
-OTEA-Server is a **secure, performant web management panel** for managing and controlling your **Arma Reforger server** from an intuitive interface.
+OTEA-Server is a **secure, performant web management panel** for managing and controlling your **Arma Reforger server** from a unified interface.
 
 **Perfect for:**
 - 🎮 Arma Reforger server administrators
@@ -23,99 +22,126 @@ OTEA-Server is a **secure, performant web management panel** for managing and co
 ## ⭐ Key Features
 
 ### 🎮 Server Management
-- ✅ **Control your Arma Reforger server** from an intuitive dashboard
-- ✅ **Real-time server status** monitoring (Running/Stopped, player count, uptime)
-- ✅ **One-click operations** - Easy start, stop, restart
-- ✅ **Advanced configuration** - Mods, missions, difficulty, game modes
-- ✅ **Player bans** - Manage player ban list
-- ✅ **Server locking** - Prevent configuration changes during gameplay
-- ✅ **Auto-restart** - Automatic recovery on failure
-- ✅ **Potential multi-server support** *(technically possible, under exploration)*
+- ✅ **Real-time dashboard** - ONLINE/OFFLINE status per configuration
+- ✅ **Preset management** - Native Arma Reforger JSON format (ServerConfig_*.json)
+- ✅ **Advanced configuration** - gameProperties, mods, missions, RCON
+- ✅ **Dynamic buttons** - Start/Stop based on actual server status
+- ✅ **Port validation** - Conflict detection before launch
+- ✅ **Launch parameters** - Configurable maxFPS and logStats per preset
+- ✅ **Arma Reforger version** - Automatic detection of installed version
+- ✅ **Multi-configuration** - Manage multiple server presets
+
+### 🏗️ Architecture
+- ✅ **Native Arma presets** - ServerConfig_*.json in official Bohemia format
+- ✅ **Separate metadata** - ServerMeta_*.json for OTEA data (launchParams)
+- ✅ **gameProperties** - Integrated in game block (Arma schema compliant)
+- ✅ **Conditional RCON** - Included only if password >= 3 characters
+- ✅ **Reference template** - presets/ServerConfig_template.json
 
 ### 🔐 Security & Access Control
 - ✅ **JWT Authentication** - Secure token-based login (24h expiration)
 - ✅ **Role-Based Access Control (RBAC)** - 3 tiers: Admin, GameMaster, Viewer
-  - **Admin:** Full system access, manage all users & servers
-  - **GameMaster:** Can only manage their own servers
-  - **Viewer:** Read-only access to all servers
+  - **Admin:** Full system access
+  - **GameMaster:** Manage their own servers
+  - **Viewer:** Read-only access
 - ✅ **Password Hashing** - bcryptjs 10-round salting
 - ✅ **Rate Limiting** - 100 requests/15 minutes per IP
-- ✅ **Helmet Security Headers** - Protection against common attacks
-- ✅ **SQL Injection Prevention** - Parameterized queries
-- ✅ **CORS Protection** - Controlled cross-origin requests
+- ✅ **Helmet Protection** - Protection against common attacks
 - ✅ **Audit Logging** - Complete action trail with timestamps
 
-### 📊 Logging & Monitoring
+### 📊 User Interface
+- ✅ **Dynamic dashboard** - Server list with live status
+- ✅ **Server configuration** - Complete form with all Arma parameters
+- ✅ **Real-time logs** - OTEA Admin and Arma Server separated
+- ✅ **Administration system** - User management and system paths
+- ✅ **Configurable team name** - Customization via TEAM_NAME variable
+- ✅ **Form validation** - serverMinGrassDistance minimum 50
 
-#### Admin Logs
-Real-time **comprehensive event logging** for all administrative actions:
-- ✅ **User Management** - Logins, logouts, password changes, role changes
-- ✅ **Server Operations** - Server starts, stops, restarts, config changes
-- ✅ **Authorization Events** - Failed access attempts, permission denials
-- ✅ **Data Modifications** - User creation/deletion
-- ✅ **Security Events** - Failed logins, rate limit triggers, suspicious activity
-- ✅ **Timestamps & Context** - WHO, WHAT, WHEN for every action
-- ✅ **Advanced Search & Filtering** - Find logs by user, action, date range, event type
-- ✅ **Export Capability** - Download logs as CSV/JSON
+### ⚙️ Configuration
+Available environment variables (.env):
+```bash
+# Application
+TEAM_NAME=OTEA                                    # Name displayed in UI
+OTEA_PORT=3000
+OTEA_HOST=localhost
 
-#### Server Logs
-- ✅ **Real-time console output** from your Arma Reforger server
-- ✅ **Log levels** - ERROR, WARNING, INFO, DEBUG filtering
-- ✅ **Search and filtering** - Quickly find specific messages by content or keywords
-- ✅ **Server status** - Connection attempts, disconnections, crashes
-- ✅ **Script logs** - Mission logs, mod debugging output
-- ✅ **Performance metrics** - CPU usage, memory consumption
-- ✅ **History** - Searchable archive of historical logs
-- ✅ **Auto-archival** - Old logs automatically moved to archive
+# Arma Server
+ARMA_SERVER_ROOT=C:\Arma3DS
+ARMA_ADDONS_DIR=C:\Arma3DS\addons              # Configurable addons folder
+STEAMCMD_PATH=C:\SteamCMD\steamcmd.exe
 
-#### System Logs
-- ✅ **Application health** - Startup, shutdown, errors
-- ✅ **Database operations** - Query logs, transaction tracking
-- ✅ **API activity** - Request/response logging
-- ✅ **Deployment events** - Installation, updates, migrations
+# Security
+JWT_SECRET=your-secret-min-32-chars
+JWT_EXPIRATION=86400
 
-### 👥 User Management
-- ✅ **Create users** with different roles (Admin, GameMaster, Viewer)
-- ✅ **Email-based user records** for easy identification
-- ✅ **Disable/enable accounts** without deletion
-- ✅ **Password reset** - Force a new login
-- ✅ **Activity tracking** - See who did what and when via audit logs
-- ✅ **Last login tracking** - Monitor moderator activity
+# Database
+DB_PATH=./data/app.db
+```
 
-### 🔧 Admin Dashboard
-- ✅ **System health monitoring** - CPU, memory, disk usage in real-time
-- ✅ **Server summary** - Complete overview of your Arma server at a glance
-- ✅ **Backup & restore** - One-click configuration backups
-- ✅ **Maintenance operations** - Cleanup, restart, optimizations
-- ✅ **Update checking** - Monitor available Arma server updates
-- ✅ **Orphan process cleanup** - Remove stuck processes
+### 📁 Preset Structure
+```
+📁 presets/
+├── ServerConfig_template.json          # Reference template
+├── ServerConfig_my_server.json         # Pure Arma config (Bohemia format)
+├── ServerMeta_my_server.json          # OTEA metadata (launchParams)
+```
 
-### 🌐 REST API
-- ✅ **56 REST API endpoints** for integration
-- ✅ **Full RBAC enforcement** on every endpoint
-- ✅ **Consistent response format** for easy integration
-- ✅ **JWT-protected routes** - Secure token-based access
-- ✅ **Detailed error messages** for debugging
-- ✅ **Ready for 3rd-party integrations**
+**ServerConfig_*.json** (official Arma Reforger format):
+```json
+{
+  "dedicatedServerId": "my_server",
+  "region": "EU",
+  "bindPort": 2001,
+  "game": {
+    "name": "My Server",
+    "scenarioId": "{ECC61978EDCC2B5A}Missions/23_Campaign.conf",
+    "maxPlayers": 16,
+    "mods": [...],
+    "gameProperties": {
+      "serverMaxViewDistance": 1600,
+      "serverMinGrassDistance": 50,
+      "networkViewDistance": 500,
+      "disableThirdPerson": false,
+      "fastValidation": true,
+      "battlEye": true
+    }
+  },
+  "rcon": {
+    "address": "0.0.0.0",
+    "port": 19999,
+    "password": "password"
+  }
+}
+```
+
+**ServerMeta_*.json** (internal OTEA data):
+```json
+{
+  "launchParams": {
+    "maxFPS": 60,
+    "logStats": 10
+  }
+}
+```
 
 ---
 
-## 🚀 30-Second Quick Start
+## 🚀 Quick Start
 
-### Option 1: Docker (Easiest)
-```powershell
-# Windows
-.\deploy-docker.ps1 -Action deploy
-
-# Linux/Mac
-chmod +x deploy-docker.sh && ./deploy-docker.sh deploy
-```
-
-**Result:** App live in < 2 minutes on http://localhost:3000
-
-### Option 2: Direct Node.js
+### Installation
 ```bash
+# Clone repository
+git clone https://github.com/OTEA-Team-Arma/OTEA-server.git
+cd OTEA-server
+
+# Install dependencies
 npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your parameters
+
+# Start application
 npm start
 ```
 
@@ -130,11 +156,154 @@ Password: admin1234
 
 ---
 
+## 🌐 Deployment and Access
+
+### Interface Access
+
+**Local (development):**
+```
+http://localhost:3000
+```
+
+**Dedicated server (direct IP):**
+```
+http://SERVER_IP:3000
+```
+Example: `http://192.168.1.100:3000`
+
+**Dedicated server (with domain and HTTPS):**
+```
+https://otea.yourdomain.com
+```
+⚠️ Requires Nginx reverse proxy + SSL certificate
+
+### Minimum configuration for remote deployment
+
+**1. Modify OTEA_HOST in .env:**
+```bash
+# To listen on all network interfaces
+OTEA_HOST=0.0.0.0
+
+# OR for a specific IP
+OTEA_HOST=192.168.1.100
+```
+
+**2. Open port in firewall:**
+- **Windows:** Control Panel → Windows Firewall → Inbound Rules → New Rule → TCP Port 3000
+- **Linux:** `sudo ufw allow 3000/tcp` (UFW) or `sudo firewall-cmd --add-port=3000/tcp --permanent` (firewalld)
+
+**3. (Optional) Nginx as reverse proxy for HTTPS:**
+```nginx
+server {
+    listen 443 ssl;
+    server_name otea.yourdomain.com;
+
+    ssl_certificate /path/to/certificate.crt;
+    ssl_certificate_key /path/to/private.key;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+---
+
+## 🔄 Node.js Process Management
+
+### Option 1: Manual Launch (development / testing)
+
+```bash
+cd "path\to\OTEA-server"
+npm start
+```
+
+**Result:**
+- ✅ OTEA accessible at `http://localhost:3000`
+- ⚠️ Stops when you close the terminal
+
+**Use case:** Testing, development, demonstration
+
+---
+
+### Option 2: Automatic Launch on Windows Startup (production)
+
+#### Via PM2 (recommended)
+
+**Installation:**
+```bash
+npm install -g pm2
+```
+
+**Starting OTEA:**
+```bash
+# Start the application
+pm2 start npm --name "otea" -- start
+
+# Save the configuration
+pm2 save
+
+# Configure automatic startup on Windows boot
+pm2 startup
+```
+
+**Advantages:**
+- ✅ OTEA starts automatically on every Windows boot
+- ✅ Monitors the process and restarts it on crash
+- ✅ Built-in log management
+
+**Useful commands:**
+```bash
+pm2 status           # Status of all processes
+pm2 logs otea        # Display logs in real-time
+pm2 stop otea        # Stop OTEA
+pm2 restart otea     # Restart OTEA
+pm2 delete otea      # Remove OTEA from PM2
+```
+
+---
+
+#### Via NSSM (alternative - native Windows service)
+
+**Installation:**
+1. Download NSSM: https://nssm.cc/download
+2. Extract `nssm.exe` to a folder (e.g., `C:\nssm`)
+
+**Service installation:**
+```bash
+nssm install OTEA-Server
+```
+
+**Configuration in NSSM interface:**
+- **Path:** `C:\Program Files\nodejs\node.exe`
+- **Startup directory:** `H:\logiciel perso\server_reforger\OTEA-server`
+- **Arguments:** `backend/index.js`
+
+**Advantages:**
+- ✅ Native Windows service (visible in `services.msc`)
+- ✅ Starts automatically on Windows boot
+- ✅ Does not require global npm
+
+**Useful commands:**
+```bash
+nssm start OTEA-Server      # Start the service
+nssm stop OTEA-Server       # Stop the service
+nssm restart OTEA-Server    # Restart the service
+nssm remove OTEA-Server     # Remove the service
+```
+
+---
+
 ## 🛠️ Technology Stack
 
 | Component | Technology |
 |-----------|-----------|
-| **Runtime** | Node.js 18 LTS |
+| **Runtime** | Node.js 18+ LTS |
 | **Backend** | Express.js v5.2.1 |
 | **Database** | SQLite3 (better-sqlite3) |
 | **Frontend** | Vanilla JS + JWT |
@@ -142,57 +311,79 @@ Password: admin1234
 | **Encryption** | bcryptjs (10-round) |
 | **Security** | Helmet, express-rate-limit |
 | **Testing** | Jest + Supertest |
-| **Container** | Docker + Docker-Compose |
 | **OS** | Windows / Linux / Mac |
 
 ---
 
 ## 📊 Project Status
 
-✅ **Production Ready v2.4**
+✅ **Production Ready v2.5.0**
 
-- **27/27 Tests Passing** (100% coverage)
-- **43+ REST API Endpoints** fully tested
-- **4 Database Tables** with relationships
-- **Complete RBAC System** (3 roles)
-- **Enterprise Security** hardened and verified
-- **Docker Deployment** optimized for production
-- **Full Documentation** (17 docs files)
+**New in v2.5:**
+- 🎯 Separate preset/meta architecture
+- 🎯 gameProperties in game block
+- 🎯 Conditional RCON (password >= 3 chars)
+- 🎯 Port validation before launch
+- 🎯 Configurable team name (TEAM_NAME)
+- 🎯 Configurable launchParams (-maxFPS, -logStats)
+- 🎯 Arma Reforger version detection
+- 🎯 Dynamic Start/Stop buttons
+- 🎯 Cross-platform process.kill compatibility
 
-**See:** [Complete Status Report](docs/PROJECT_STATUS.md)
+**Current status:**
+- **Tests** - Test suite in place
+- **REST API** - 50+ documented endpoints
+- **Database** - 4 tables with relationships
+- **RBAC** - Complete system (3 roles)
+- **Security** - JWT + bcryptjs + Helmet
+- **Documentation** - Complete and up to date
 
 ---
 
-## 📚 Documentation
+## 📋 Detailed Features
 
-### Quick Links
-- **[🚀 Quick Start](docs/QUICK_START.md)** - Get running in 5 minutes
-- **[📋 Deployment Guide](docs/DEPLOYMENT/DEPLOYMENT_GUIDE.md)** - Choose your platform
-- **[🐳 Docker Quick Start](docs/DEPLOYMENT/DOCKER_QUICKSTART.md)** - Docker in 5 min
-- **[🔐 Security Plan](docs/DEPLOYMENT/SECURITY_PLAN.md)** - Hardening guide
-- **[📖 API Docs](docs/REFERENCE/API.md)** - 56 endpoints documented
-- **[❓ FAQ](docs/REFERENCE/FAQ.md)** - Common questions
+### Dashboard
+- List of available server configurations
+- Real-time ONLINE / OFFLINE status per preset
+- "Start" button if server stopped
+- "Stop" button if server running
+- Uptime display for active servers
+- Detected Arma Reforger Server version
 
-### Full Documentation Structure
-```
-📁 docs/
-├── 🚀 QUICK_START.md          5-minute deploy
-├── 📊 PROJECT_STATUS.md        Complete overview
-├── 📁 DEPLOYMENT/              Deployment guides
-│   ├── DEPLOYMENT_GUIDE.md     Windows/Linux/Docker comparison
-│   ├── DOCKER_QUICKSTART.md    Docker rapid deploy
-│   ├── SECURITY_PLAN.md        Security hardening
-│   ├── CHECKLIST.md            Pre-deployment checklist
-│   └── ADMIN_DEPLOYMENT.md     Admin operations
-├── 📁 REFERENCE/               Technical reference
-│   ├── API.md                  56 REST endpoints
-│   ├── FEATURES.md             Feature breakdown
-│   └── FAQ.md                  Troubleshooting
-└── 📁 INSTALLATION/            Platform guides
-    ├── DOCKER.md               Docker details
-    ├── WINDOWS.md              Windows Server setup
-    └── LINUX.md                Linux/VPS setup
-```
+### Server Configuration
+- Complete CRUD on presets
+- Form with all Arma parameters:
+  - General information (name, port, scenario, max players)
+  - gameProperties (view distances, grass, network, 3rd person, validation, BattlEye)
+  - RCON (address, port, password, maxClients) - conditional
+  - launchParams (maxFPS, logStats)
+  - Mods (add/remove)
+- Validation serverMinGrassDistance >= 50
+- Dynamic Start/Stop button based on status
+
+### Logs
+- "OTEA Admin Logs" tab: administrative actions
+- "Arma Server Logs" tab: dedicated server console output
+- Search and filtering
+
+### Administration
+- User management (CRUD, roles)
+- System paths configuration
+- Configurable team name
+- OTEA server restart
+
+---
+
+## ⚠️ Known Limitations
+
+### What does NOT work yet
+- **Server stop untested** - Waiting for Bohemia Interactive update for Arma Reforger dedicated server
+- **Team deployment** - Not yet deployed to production
+
+### In development
+- Complete integration tests
+- Docker deployment
+- Simultaneous multi-server support
 
 ---
 
@@ -201,13 +392,11 @@ Password: admin1234
 ### Authentication
 - ✅ JWT tokens (24-hour expiration)
 - ✅ Secure password hashing (bcryptjs)
-- ✅ Token refresh mechanism
 - ✅ Session management
 
 ### Authorization
 - ✅ Role-based access control (Admin, GameMaster, Viewer)
 - ✅ Endpoint-level RBAC enforcement
-- ✅ Database-level query filtering
 - ✅ Admin-only sensitive operations
 
 ### Network Security
@@ -221,17 +410,6 @@ Password: admin1234
 - ✅ Encrypted password storage
 - ✅ Comprehensive audit logging
 - ✅ Database transactions
-- ✅ Field-level validation
-- ✅ Error message sanitization
-
-### Deployment Security
-- ✅ Non-root container user
-- ✅ Alpine Linux (minimal surface)
-- ✅ Environment variable isolation
-- ✅ Health checks & auto-restart
-- ✅ Production-hardened configuration
-
-**[Full Security Details](docs/DEPLOYMENT/SECURITY_PLAN.md)**
 
 ---
 
@@ -240,145 +418,64 @@ Password: admin1234
 - **Startup time:** ~3 seconds
 - **Memory usage:** ~120MB baseline
 - **API response time:** < 100ms average
-- **Container size:** ~150MB (Alpine optimized)
-- **Concurrent users:** Tested with 50+
-- **Requests/sec:** Handles 100+ req/sec
+- **Cross-platform compatibility:** Windows, Linux, Mac
 
 ---
 
 ## 🎯 Use Cases
 
 ### 🎮 Arma Community Animator
-Manage an Arma Reforger server with moderators and members having different access levels
+Manage an Arma Reforger server with moderators having different access levels
 
 ### 👥 Multi-Player Group
 Allow multiple administrators to manage different aspects of the server based on responsibilities
 
 ### 🎪 Event Manager
-Control the server during special events with locked-down configuration
+Control the server during special events with multiple configurations
 
 ---
 
 ## 🤝 Support & Contributing
-
-### Need Help?
-- **📖 Documentation:** [Complete guides in /docs](docs/)
-- **❓ FAQ:** [Frequently asked questions](docs/REFERENCE/FAQ.md)
-- **🐛 Issues:** Check [existing issues](https://github.com/yourname/otea-server/issues)
-- **💬 Community:** [Discussion forum](https://example.com)
 
 ### License
 MIT - See [LICENSE](LICENSE) file
 
 ---
 
-## 🚀 Deployment Paths
+## ✨ What Makes OTEA-Server v2.5 Different?
 
-### Start Development
-```bash
-npm install
-npm run dev    # With automatic reload
-npm start      # Production mode
-```
-
-### Deploy to Production
-1. **Docker (Recommended):**
-   ```bash
-   ./deploy-docker.ps1 deploy    # Windows
-   ./deploy-docker.sh deploy     # Linux/Mac
-   ```
-   **[Full Docker Guide](docs/DEPLOYMENT/DOCKER_QUICKSTART.md)**
-
-2. **Windows Server:**
-   ```powershell
-   # Install Node.js + PM2/NSSM service
-   ```
-   **[Windows Setup](docs/INSTALLATION/WINDOWS.md)**
-
-3. **Linux/VPS:**
-   ```bash
-   # systemd service setup
-   ```
-   **[Linux Setup](docs/INSTALLATION/LINUX.md)**
-
----
-
-## ✨ What Makes OTEA-Server Different?
-
-| Feature | OTEA-Server |
+| Feature | OTEA-Server v2.5 |
 |---------|--------|
-| **Web UI** | ✅ Modern and intuitive |
-| **RBAC** | ✅ 3-tier system (Admin, GameMaster, Viewer) |
-| **Audit Logs** | ✅ Complete trail with search |
-| **Log Filtering** | ✅ Advanced search by content |
-| **API** | ✅ 56 documented endpoints |
-| **Security** | ✅ Hardened (JWT, bcryptjs, Helmet) |
-| **Testing** | ✅ 27/27 tests (100%) |
-| **Documentation** | ✅ 17 complete guides in English |
-| **Deployment** | ✅ Docker + Windows + Linux |
-
----
-
-## 📦 Deployment Ready
-
-- ✅ **Docker** - Production-optimized Dockerfile
-- ✅ **Docker-Compose** - Complete stack (app + nginx + sqlite)
-- ✅ **Kubernetes** - Ready for orchestration
-- ✅ **Windows Services** - NSSM or PM2 scripts
-- ✅ **Linux Systemd** - Systemd service template
-- ✅ **CI/CD** - GitHub Actions ready
-- ✅ **Scalable** - Horizontal scaling support
+| **Preset Format** | ✅ Native Arma Reforger JSON |
+| **Metadata** | ✅ Separate (ServerMeta_*.json) |
+| **gameProperties** | ✅ Integrated in game block |
+| **RCON** | ✅ Conditional (password >= 3) |
+| **Validation** | ✅ Port conflicts detected |
+| **Dynamic UI** | ✅ Live Start/Stop buttons |
+| **Customization** | ✅ Configurable team name |
+| **Cross-platform** | ✅ Windows, Linux, Mac |
+| **Security** | ✅ JWT + RBAC + Helmet |
 
 ---
 
 ## 🎉 Ready to Deploy?
 
-👉 **[Start with Quick Start (5 min)](docs/QUICK_START.md)**
+```bash
+# Clone and install
+git clone https://github.com/OTEA-Team-Arma/OTEA-server.git
+cd OTEA-server
+npm install
 
-👉 **[Choose your deployment path](docs/DEPLOYMENT/DEPLOYMENT_GUIDE.md)**
+# Configure
+cp .env.example .env
+# Edit .env with your parameters
 
-👉 **[Review security before production](docs/DEPLOYMENT/SECURITY_PLAN.md)**
+# Start
+npm start
+```
 
----
-
-**Version:** 2.4.0 | **Status:** ✅ Production Ready | **Tests:** 27/27 ✅ | **Last Updated:** 9 April 2026
-
-
-
-### For Operators/DevOps
-1. [Quick Start](QUICK_START.md) - Get it running
-2. Choose deployment: [DOCKER.md](INSTALLATION/DOCKER.md) | [WINDOWS.md](INSTALLATION/WINDOWS.md) | [LINUX.md](INSTALLATION/LINUX.md)
-3. [DEPLOYMENT/CHECKLIST.md](DEPLOYMENT/CHECKLIST.md) - Verify
-
-### For Developers
-1. [REFERENCE/API.md](REFERENCE/API.md) - API endpoints
-2. [REFERENCE/FEATURES.md](REFERENCE/FEATURES.md) - Features
-3. [PROJECT_STATUS.md](PROJECT_STATUS.md) - Architecture
-
-### For End Users
-1. [Quick Start](QUICK_START.md) - Get running
-2. [REFERENCE/FAQ.md](REFERENCE/FAQ.md) - Help
-3. [REFERENCE/FEATURES.md](REFERENCE/FEATURES.md) - What it does
+Visit **http://localhost:3000**
 
 ---
 
-## 📊 OTEA-Server v2.4 Highlights
-
-✅ **Fully Secured** - JWT tokens + Role-based access (3 roles)  
-✅ **Completely Tested** - 27/27 tests passing (100%)  
-✅ **Production Ready** - Enterprise-grade security  
-✅ **Multi-Platform** - Docker, Windows, Linux  
-✅ **REST API** - 43 endpoints fully documented  
-✅ **Admin Panel** - Web-based management interface  
-
----
-
-## 🔗 Links
-
-- **[Main README](../README.md)** - Root documentation
-- **[GitHub](https://github.com/OTEA-Team-Arma/OTEA-server)** - Repository
-- **[OTEA.fr](https://www.otea.fr)** - Community website
-
----
-
-**Status:** ✅ Production Ready | 🔒 Security Hardened | 📚 Fully Documented
+**Version:** 2.5.0 | **Status:** ✅ Production Ready | **Last Updated:** September 9, 2026
