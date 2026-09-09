@@ -89,7 +89,7 @@ class ArmaServerService {
                 };
             });
 
-            // Construire la config au format Arma Reforger
+            // Construire la config au format Arma Reforger (uniquement champs valides)
             const armaConfig = {
                 dedicatedServerId: slug,
                 region: data.region || 'EU',
@@ -112,22 +112,34 @@ class ArmaServerService {
                     crossPlatform: false,
                     mods: cleanMods
                 },
-                rcon: {
-                    address: data.rcon?.address || '0.0.0.0',
-                    port: data.rcon?.port ?? 19999,
-                    password: data.rcon?.password || '',
-                    maxClients: data.rcon?.maxClients ?? 16
-                },
+                ...(data.rcon?.password && data.rcon.password.length >= 3 ? {
+                    rcon: {
+                        address: data.rcon.address || '0.0.0.0',
+                        port: data.rcon.port ?? 19999,
+                        password: data.rcon.password,
+                        maxClients: data.rcon.maxClients ?? 16
+                    }
+                } : {})
+            };
+
+            // Construire le fichier meta OTEA (données non reconnues par Arma)
+            const metaConfig = {
                 launchParams: {
                     maxFPS: data.launchParams?.maxFPS ?? 60,
                     logStats: data.launchParams?.logStats ?? 10
                 }
             };
 
-            // Sauvegarder le fichier
+            // Sauvegarder le fichier Arma pur
             await fs.writeFile(filePath, JSON.stringify(armaConfig, null, 2));
 
+            // Sauvegarder le fichier meta OTEA
+            const metaFilename = `ServerMeta_${slug}.json`;
+            const metaPath = path.join(PRESETS_DIR, metaFilename);
+            await fs.writeFile(metaPath, JSON.stringify(metaConfig, null, 2));
+
             console.log(`[ArmaServerService] ✅ Config saved: ${filePath}`);
+            console.log(`[ArmaServerService] ✅ Meta saved: ${metaPath}`);
 
             return {
                 success: true,
@@ -156,9 +168,24 @@ class ArmaServerService {
             const content = await fs.readFile(filePath, 'utf8');
             const config = JSON.parse(content);
 
+            // Charger le fichier meta correspondant (si existe)
+            const metaFilename = filename.replace('ServerConfig_', 'ServerMeta_');
+            const metaPath = path.join(PRESETS_DIR, metaFilename);
+            let meta = {};
+
+            if (fsSync.existsSync(metaPath)) {
+                const metaContent = await fs.readFile(metaPath, 'utf8');
+                meta = JSON.parse(metaContent);
+                console.log(`[ArmaServerService] ✅ Meta loaded: ${metaPath}`);
+            }
+
             console.log(`[ArmaServerService] ✅ Config loaded: ${filePath}`);
 
-            return config;
+            // Fusionner config Arma + meta OTEA
+            return {
+                ...config,
+                ...meta
+            };
         } catch (error) {
             throw new Error(`Failed to load config: ${error.message}`);
         }
@@ -180,7 +207,7 @@ class ArmaServerService {
             const configs = [];
 
             for (const file of files) {
-                if (!file.startsWith('ServerConfig_') || !file.endsWith('.json')) {
+                if (!file.startsWith('ServerConfig_') || !file.endsWith('.json') || file === 'ServerConfig_template.json') {
                     continue;
                 }
 
@@ -269,6 +296,13 @@ class ArmaServerService {
             // Charger la config pour validation
             const config = await this.loadConfig(filename);
 
+            // Charger le fichier meta correspondant
+            const metaFilename = filename.replace('ServerConfig_', 'ServerMeta_');
+            const metaPath = path.join(PRESETS_DIR, metaFilename);
+            const meta = fsSync.existsSync(metaPath)
+                ? JSON.parse(fsSync.readFileSync(metaPath, 'utf-8'))
+                : {};
+
             // Chemin absolu vers le fichier de config
             const configPath = path.join(PRESETS_DIR, filename);
 
@@ -277,7 +311,7 @@ class ArmaServerService {
 
             // Récupérer l'exécutable et les args depuis osAbstraction
             const executable = osAbstraction.getServerExecutable();
-            const args = osAbstraction.buildLaunchArgs(configPath, port, config.game?.mods, config.launchParams);
+            const args = osAbstraction.buildLaunchArgs(configPath, port, config.game?.mods, meta.launchParams);
 
             console.log(`[ArmaServerService] 📋 Launch command: ${executable} ${args.join(' ')}`);
 

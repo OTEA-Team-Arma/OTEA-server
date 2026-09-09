@@ -34,7 +34,7 @@ class ArmaServerController {
 
             // Validation
             if (!port || !config) {
-                await LogService.logAction('server-start-invalid', req.user?.name, {
+                await LogService.logAction('server-start-invalid', req.user?.username || 'system', {
                     ip: req.ip,
                     reason: 'Missing port or config'
                 });
@@ -45,7 +45,7 @@ class ArmaServerController {
 
             // Vérifier port valide
             if (port < 1024 || port > 65535) {
-                await LogService.logAction('server-start-invalid', req.user?.name, {
+                await LogService.logAction('server-start-invalid', req.user?.username || 'system', {
                     ip: req.ip,
                     port: port,
                     reason: 'Invalid port range'
@@ -68,7 +68,7 @@ class ArmaServerController {
             });
 
             // Log action
-            await LogService.logAction('server-started', req.user?.name, {
+            await LogService.logAction('server-started', req.user?.username || 'system', {
                 ip: req.ip,
                 port: port,
                 presetId: presetId || null,
@@ -77,7 +77,7 @@ class ArmaServerController {
 
             return res.json(success(result, 'Server started successfully'));
         } catch (err) {
-            await LogService.logAction('server-start-error', req.user?.name, {
+            await LogService.logAction('server-start-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -164,7 +164,7 @@ class ArmaServerController {
                 { osAbstraction: req.app.locals.osAbstraction }
             );
 
-            await LogService.logAction('server-restarted', req.user?.name, {
+            await LogService.logAction('server-restarted', req.user?.username || 'system', {
                 ip: req.ip,
                 port: port,
                 pid: result.pid
@@ -172,7 +172,7 @@ class ArmaServerController {
 
             return res.json(success(result, 'Server restarted successfully'));
         } catch (err) {
-            await LogService.logAction('server-restart-error', req.user?.name, {
+            await LogService.logAction('server-restart-error', req.user?.username || 'system', {
                 ip: req.ip,
                 port: req.params.port,
                 error: err.message
@@ -206,14 +206,14 @@ class ArmaServerController {
 
             await ArmaServerService.updateConfig(parseInt(port), config);
 
-            await LogService.logAction('server-config-updated', req.user?.name, {
+            await LogService.logAction('server-config-updated', req.user?.username || 'system', {
                 ip: req.ip,
                 port: port
             });
 
             return res.json(success({ port, config }, 'Config updated successfully'));
         } catch (err) {
-            await LogService.logAction('server-config-error', req.user?.name, {
+            await LogService.logAction('server-config-error', req.user?.username || 'system', {
                 ip: req.ip,
                 port: req.params?.port,
                 error: err.message
@@ -276,14 +276,14 @@ class ArmaServerController {
 
             const result = await ArmaServerService.stop(parseInt(port));
 
-            await LogService.logAction('server-stopped', req.user?.name, {
+            await LogService.logAction('server-stopped', req.user?.username || 'system', {
                 ip: req.ip,
                 port: port
             });
 
             return res.json(success(result, 'Server stopped successfully'));
         } catch (err) {
-            await LogService.logAction('server-stop-error', req.user?.name, {
+            await LogService.logAction('server-stop-error', req.user?.username || 'system', {
                 ip: req.ip,
                 port: req.params?.port,
                 error: err.message
@@ -331,7 +331,7 @@ class ArmaServerController {
 
             // Validation
             if (!filename || !port) {
-                await LogService.logAction('server-start-invalid', req.user?.name, {
+                await LogService.logAction('server-start-invalid', req.user?.username || 'system', {
                     ip: req.ip,
                     reason: 'Missing filename or port'
                 });
@@ -342,7 +342,7 @@ class ArmaServerController {
 
             // Vérifier port valide
             if (port < 1024 || port > 65535) {
-                await LogService.logAction('server-start-invalid', req.user?.name, {
+                await LogService.logAction('server-start-invalid', req.user?.username || 'system', {
                     ip: req.ip,
                     port: port,
                     reason: 'Invalid port range'
@@ -365,7 +365,7 @@ class ArmaServerController {
             });
 
             // Log action
-            await LogService.logAction('server-started', req.user?.name, {
+            await LogService.logAction('server-started', req.user?.username || 'system', {
                 ip: req.ip,
                 port: port,
                 configFile: filename,
@@ -374,7 +374,7 @@ class ArmaServerController {
 
             return res.json(success(result, 'Server started successfully'));
         } catch (err) {
-            await LogService.logAction('server-start-error', req.user?.name, {
+            await LogService.logAction('server-start-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });

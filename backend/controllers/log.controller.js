@@ -164,14 +164,14 @@ class LogController {
         try {
             const result = await LogService.cleanup();
 
-            await LogService.logAction('admin-cleanup-logs', req.user?.name, {
+            await LogService.logAction('admin-cleanup-logs', req.user?.username || 'system', {
                 ip: req.ip,
                 deleted: result.deleted
             });
 
             return res.json(success(result, 'Logs cleaned up successfully'));
         } catch (err) {
-            await LogService.logAction('admin-cleanup-logs-error', req.user?.name, {
+            await LogService.logAction('admin-cleanup-logs-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -235,7 +235,7 @@ class LogController {
             }
 
             // Log BEFORE clearing!
-            await LogService.logAction('DANGER-clear-all-logs', req.user?.name, {
+            await LogService.logAction('DANGER-clear-all-logs', req.user?.username || 'system', {
                 ip: req.ip,
                 warning: 'ALL LOGS CLEARED BY ADMIN'
             });
@@ -247,7 +247,7 @@ class LogController {
                 'All logs cleared'
             ));
         } catch (err) {
-            await LogService.logAction('DANGER-clear-all-logs-error', req.user?.name, {
+            await LogService.logAction('DANGER-clear-all-logs-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });

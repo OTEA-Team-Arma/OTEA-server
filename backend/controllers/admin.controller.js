@@ -31,7 +31,7 @@ class AdminController {
 
             return res.json(success(result, 'Server restarted by admin'));
         } catch (err) {
-            await LogService.logAction('admin-restart-error', req.user?.name, {
+            await LogService.logAction('admin-restart-error', req.user?.username || 'system', {
                 ip: req.ip,
                 port,
                 error: err.message
@@ -48,7 +48,7 @@ class AdminController {
      */
     static async restartAllServers(req, res) {
         try {
-            await LogService.logAction('admin-restart-all-initiated', req.user?.name, {
+            await LogService.logAction('admin-restart-all-initiated', req.user?.username || 'system', {
                 ip: req.ip
             });
 
@@ -56,7 +56,7 @@ class AdminController {
                 osAbstraction: req.app.locals.osAbstraction
             });
 
-            await LogService.logAction('admin-restart-all-completed', req.user?.name, {
+            await LogService.logAction('admin-restart-all-completed', req.user?.username || 'system', {
                 ip: req.ip,
                 results
             });
@@ -66,7 +66,7 @@ class AdminController {
                 `${results.length} servers restarted`
             ));
         } catch (err) {
-            await LogService.logAction('admin-restart-all-error', req.user?.name, {
+            await LogService.logAction('admin-restart-all-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -82,7 +82,7 @@ class AdminController {
      */
     static async stopAllServers(req, res) {
         try {
-            await LogService.logAction('admin-stop-all-initiated', req.user?.name, {
+            await LogService.logAction('admin-stop-all-initiated', req.user?.username || 'system', {
                 ip: req.ip
             });
 
@@ -90,7 +90,7 @@ class AdminController {
                 osAbstraction: req.app.locals.osAbstraction
             });
 
-            await LogService.logAction('admin-stop-all-completed', req.user?.name, {
+            await LogService.logAction('admin-stop-all-completed', req.user?.username || 'system', {
                 ip: req.ip,
                 stopped: results.length
             });
@@ -100,7 +100,7 @@ class AdminController {
                 `${results.length} servers stopped`
             ));
         } catch (err) {
-            await LogService.logAction('admin-stop-all-error', req.user?.name, {
+            await LogService.logAction('admin-stop-all-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -126,14 +126,14 @@ class AdminController {
 
             const result = await AdminService.backupConfig(configPath, backupDir);
 
-            await LogService.logAction('admin-backup-config', req.user?.name, {
+            await LogService.logAction('admin-backup-config', req.user?.username || 'system', {
                 ip: req.ip,
                 backupPath: result.backupPath
             });
 
             return res.json(success(result, 'Config backed up successfully'));
         } catch (err) {
-            await LogService.logAction('admin-backup-config-error', req.user?.name, {
+            await LogService.logAction('admin-backup-config-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -185,7 +185,7 @@ class AdminController {
         try {
             const { dryRun } = req.body;
 
-            await LogService.logAction('admin-cleanup-initiated', req.user?.name, {
+            await LogService.logAction('admin-cleanup-initiated', req.user?.username || 'system', {
                 ip: req.ip,
                 dryRun: dryRun || false
             });
@@ -194,14 +194,14 @@ class AdminController {
                 dryRun: dryRun || false
             });
 
-            await LogService.logAction('admin-cleanup-completed', req.user?.name, {
+            await LogService.logAction('admin-cleanup-completed', req.user?.username || 'system', {
                 ip: req.ip,
                 killed: result.killed
             });
 
             return res.json(success(result, 'Cleanup completed'));
         } catch (err) {
-            await LogService.logAction('admin-cleanup-error', req.user?.name, {
+            await LogService.logAction('admin-cleanup-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -217,7 +217,7 @@ class AdminController {
      */
     static async recycleOtea(req, res) {
         try {
-            await LogService.logAction('admin-recycle-initiated', req.user?.name, {
+            await LogService.logAction('admin-recycle-initiated', req.user?.username || 'system', {
                 ip: req.ip
             });
 
@@ -234,7 +234,7 @@ class AdminController {
                 });
             }, 1000);
         } catch (err) {
-            await LogService.logAction('admin-recycle-error', req.user?.name, {
+            await LogService.logAction('admin-recycle-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });

@@ -77,7 +77,7 @@ class PresetsController {
                 description: req.body.description
             });
 
-            await LogService.logAction('preset-saved', req.user?.name, {
+            await LogService.logAction('preset-saved', req.user?.username || 'system', {
                 ip: req.ip,
                 presetId: id
             });
@@ -89,7 +89,7 @@ class PresetsController {
                     validationError([err.message])
                 );
             }
-            await LogService.logAction('preset-save-error', req.user?.name, {
+            await LogService.logAction('preset-save-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -115,7 +115,7 @@ class PresetsController {
 
             const result = await PresetsService.deletePreset(id);
 
-            await LogService.logAction('preset-deleted', req.user?.name, {
+            await LogService.logAction('preset-deleted', req.user?.username || 'system', {
                 ip: req.ip,
                 presetId: id
             });
@@ -127,7 +127,7 @@ class PresetsController {
                     error('Preset not found', 'NOT_FOUND')
                 );
             }
-            await LogService.logAction('preset-delete-error', req.user?.name, {
+            await LogService.logAction('preset-delete-error', req.user?.username || 'system', {
                 ip: req.ip,
                 presetId: req.params.id,
                 error: err.message
@@ -154,7 +154,7 @@ class PresetsController {
 
             const duplicated = await PresetsService.duplicatePreset(sourceId, destId);
 
-            await LogService.logAction('preset-duplicated', req.user?.name, {
+            await LogService.logAction('preset-duplicated', req.user?.username || 'system', {
                 ip: req.ip,
                 from: sourceId,
                 to: destId
@@ -162,7 +162,7 @@ class PresetsController {
 
             return res.json(success(duplicated, 'Preset duplicated successfully'));
         } catch (err) {
-            await LogService.logAction('preset-duplicate-error', req.user?.name, {
+            await LogService.logAction('preset-duplicate-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
@@ -188,14 +188,14 @@ class PresetsController {
 
             const preset = await PresetsService.importPreset(id, data);
 
-            await LogService.logAction('preset-imported', req.user?.name, {
+            await LogService.logAction('preset-imported', req.user?.username || 'system', {
                 ip: req.ip,
                 presetId: id
             });
 
             return res.json(success(preset, 'Preset imported successfully'));
         } catch (err) {
-            await LogService.logAction('preset-import-error', req.user?.name, {
+            await LogService.logAction('preset-import-error', req.user?.username || 'system', {
                 ip: req.ip,
                 error: err.message
             });
