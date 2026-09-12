@@ -367,13 +367,7 @@ function buildLaunchArgs(configPath, port, addons, launchParams) {
         args.push('-addons', addons.join(','));
     }
 
-    // Utiliser le dossier addons du serveur dédié (configurable via env/config)
-    const addonsDir = config.addonsDir || path.join(serverRootPath, 'addons');
-
-    args.push(
-        '-addonsDir', addonsDir,
-        '-profile', profilePath
-    );
+    args.push('-profile', profilePath);
 
     // Ajouter paramètres de lancement optionnels
     if (launchParams?.maxFPS && launchParams.maxFPS > 0) {

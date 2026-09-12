@@ -326,7 +326,8 @@ class ArmaServerService {
             // Lancer le serveur en mode détaché
             const proc = spawn(executable, args, {
                 detached: true,
-                stdio: ['ignore', 'pipe', 'pipe']
+                stdio: ['ignore', 'pipe', 'pipe'],
+                cwd: path.dirname(executable)
             });
 
             // Tracker en mémoire
