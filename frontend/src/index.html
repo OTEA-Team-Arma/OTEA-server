@@ -158,6 +158,18 @@
                 <!-- Bouton Sauvegarder -->
                 <button class="btn btn-start" onclick="saveSystemPaths()" style="margin-top:10px;">💾 Sauvegarder les chemins</button>
                 <div id="systemPathsMsg" style="margin-top:10px;font-size:12px;"></div>
+
+                <!-- JWT Security Section -->
+                <div style="margin-top:20px;">
+                    <h3 style="color:var(--accent);margin-bottom:10px;font-size:14px;">🔐 Sécurité JWT</h3>
+                    <button class="btn btn-warning" onclick="generateJwtSecret()"
+                            style="background:#e67e22;width:100%;">
+                        🔑 Générer une nouvelle clé JWT
+                    </button>
+                    <small style="color:#888;font-size:11px;display:block;margin-top:5px;">
+                        ⚠️ Tous les utilisateurs seront déconnectés. À faire hors session.
+                    </small>
+                </div>
             </div>
         </div>
 

@@ -1890,6 +1890,28 @@ async function saveSystemPaths() {
     }
 }
 
+/**
+ * Génère une nouvelle clé JWT
+ */
+async function generateJwtSecret() {
+    if (!confirm('⚠️ Générer une nouvelle clé JWT ?\nTous les utilisateurs connectés seront déconnectés immédiatement.')) {
+        return;
+    }
+    try {
+        const response = await apiRequest('/system/generate-jwt-secret', 'POST');
+        if (response && response.success) {
+            showNotification('✅ Nouvelle clé JWT générée. Reconnectez-vous.', 'success');
+            setTimeout(() => {
+                AUTH_MODULE.logout();
+            }, 2000);
+        } else {
+            showNotification('Erreur lors de la génération', 'error');
+        }
+    } catch (err) {
+        showNotification('Erreur lors de la génération', 'error');
+    }
+}
+
 
 // Initialisation au chargement de la page
 window.addEventListener('load', () => {

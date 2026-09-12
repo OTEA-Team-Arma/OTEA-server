@@ -138,8 +138,49 @@ async function getAppConfig(req, res) {
     }
 }
 
+/**
+ * POST /api/system/generate-jwt-secret
+ * Génère une nouvelle clé JWT et met à jour le fichier .env
+ */
+async function generateJwtSecret(req, res) {
+    try {
+        const crypto = require('crypto');
+        const newSecret = crypto.randomBytes(48).toString('hex'); // 96 chars hex
+
+        // Lire le .env actuel
+        const envPath = path.join(__dirname, '..', '..', '.env');
+        let envContent = fsSync.readFileSync(envPath, 'utf-8');
+
+        // Remplacer JWT_SECRET
+        envContent = envContent.replace(
+            /JWT_SECRET=.*/,
+            `JWT_SECRET=${newSecret}`
+        );
+
+        // Écrire le nouveau .env
+        fsSync.writeFileSync(envPath, envContent);
+
+        console.log('[system.controller] JWT Secret regenerated');
+
+        return res.json({
+            success: true,
+            message: 'JWT Secret régénéré. Tous les utilisateurs seront déconnectés.',
+            code: 'JWT_SECRET_UPDATED'
+        });
+    } catch (err) {
+        console.error('[system.controller] Error in generateJwtSecret:', err);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to generate JWT secret',
+            code: 'JWT_ERROR',
+            error: err.message
+        });
+    }
+}
+
 module.exports = {
     getSystemPaths,
     updateSystemPaths,
-    getAppConfig
+    getAppConfig,
+    generateJwtSecret
 };

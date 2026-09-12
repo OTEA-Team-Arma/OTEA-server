@@ -17,4 +17,7 @@ router.put('/paths', systemController.updateSystemPaths);
 // GET /api/system/app-config - Récupérer la configuration de l'application
 router.get('/app-config', systemController.getAppConfig);
 
+// POST /api/system/generate-jwt-secret - Générer une nouvelle clé JWT
+router.post('/generate-jwt-secret', systemController.generateJwtSecret);
+
 module.exports = router;
