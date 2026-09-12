@@ -359,15 +359,9 @@ function buildLaunchArgs(configPath, port, addons, launchParams) {
     const args = [
         '-config', configPath,
         '-port', String(port),
-        '-update'
+        '-update',
+        '-profile', profilePath
     ];
-
-    // Ajouter -addons si le tableau est fourni et non vide
-    if (addons && Array.isArray(addons) && addons.length > 0) {
-        args.push('-addons', addons.join(','));
-    }
-
-    args.push('-profile', profilePath);
 
     // Ajouter paramètres de lancement optionnels
     if (launchParams?.maxFPS && launchParams.maxFPS > 0) {
